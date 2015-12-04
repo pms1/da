@@ -171,16 +171,32 @@ public class JpaProperty {
 	public Type elementType;
 
 	JpaProperty withColumn(ColumnAnnotation column) {
+		JpaProperty result = withName(name);
+		result.column = column;
+		return result;
+	}
+
+	JpaProperty withName(String name) {
 		JpaProperty result = new JpaProperty(name);
 		result.access = access;
 		result.attributeOverrides = attributeOverrides;
-		result.column = column;
-		result.fieldType = fieldType;
-		result.id = id;
-		result.trans = trans;
-		result.type = type;
+		result.collectionTable = collectionTable;
 		if (collectionTableProperties != null)
 			result.collectionTableProperties = new ArrayList<>(collectionTableProperties);
+		result.column = column;
+		result.elementType = elementType;
+		result.fieldType = fieldType;
+		result.id = id;
+		result.joinColumns = joinColumns;
+		result.joinTable = joinTable;
+		result.manytomany = manytomany;
+		result.manytoone = manytoone;
+		result.onetomany = onetomany;
+		result.onetoone = onetoone;
+		result.orderColumn = orderColumn;
+		result.trans = trans;
+		result.type = type;
+		result.type2 = type2;
 		return result;
 	}
 }

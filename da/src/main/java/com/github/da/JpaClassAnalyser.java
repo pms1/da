@@ -802,12 +802,12 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 	}
 
 	void collectProperties(ClassHierarchy ch, ClassModel t, JpaAccess a, Consumer<JpaProperty> dest,
-			Map<String, ColumnAnnotation> overrides, Predicate<JpaAnalysisResult> filter) {
+			Map<String, ColumnAnnotation> overrides, Predicate<JpaAnalysisResult> filter, String prefix) {
 		Objects.requireNonNull(t);
 
 		ClassModel t2 = ch.get(t.getSuperType().getRawType());
 		if (t2 != null) {
-			collectProperties(ch, t2, a, dest, overrides, p -> p.isMappedSuperclass());
+			collectProperties(ch, t2, a, dest, overrides, p -> p.isMappedSuperclass(), prefix);
 		}
 
 		TResult r = t.get(TResult.class);
@@ -846,20 +846,31 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				ColumnAnnotation override = overrides.get(e.getKey());
 				if (override != null)
 					p1 = p1.withColumn(override);
-				dest.accept(p1);
+				dest.accept(addPrefix(p1, prefix));
 				break;
 			case EMBEDDED:
 				t2 = ch.get(e.getValue().type);
 				Map<String, ColumnAnnotation> nextOverrides;
 				nextOverrides = createOverride(overrides, e.getKey(), e.getValue().attributeOverrides);
-				collectProperties(ch, t2, a, dest, nextOverrides, (p) -> true);
+				collectProperties(ch, t2, a, dest, nextOverrides, (p) -> true, joinPrefix(prefix, e.getValue().name));
 				break;
 			default:
 				System.err.println("UNHANDLED");
-				dest.accept(e.getValue());
+				dest.accept(addPrefix(e.getValue(), prefix));
 				break;
 			}
 		}
+	}
+
+	static JpaProperty addPrefix(JpaProperty p, String prefix) {
+		if (prefix.isEmpty())
+			return p;
+		else
+			return p.withName(prefix + "." + p.name);
+	}
+
+	static String joinPrefix(String prefix1, String prefix2) {
+		return prefix1.isEmpty() ? prefix2 : prefix1 + "." + prefix2;
 	}
 
 	private Map<String, ColumnAnnotation> createOverride(Map<String, ColumnAnnotation> overrides, String key,
@@ -945,12 +956,15 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 
 			Map<String, JpaProperty> properties = new HashMap<>();
 
-			collectProperties(ch, bean, defaultAccess, (v) -> properties.put(v.name, v), Collections.emptyMap(),
-					(p) -> {
-						if (!p.isEntity())
-							throw new Error();
-						return true;
-					});
+			collectProperties(ch, bean, defaultAccess, (v) -> {
+				JpaProperty old = properties.putIfAbsent(v.name, v);
+				if (old != null)
+					throw new IllegalArgumentException();
+			} , Collections.emptyMap(), (p) -> {
+				if (!p.isEntity())
+					throw new Error();
+				return true;
+			} , "");
 
 			for (JpaProperty p : properties.values()) {
 				switch (p.fieldType) {
@@ -1000,8 +1014,11 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 					else
 						nextOverrides = Collections.emptyMap();
 
-					collectProperties(ch, ch.get(elementType), defaultAccess, (v) -> properties2.put(v.name, v),
-							nextOverrides, (p1) -> true);
+					collectProperties(ch, ch.get(elementType), defaultAccess, (v) -> {
+						JpaProperty old = properties2.putIfAbsent(v.name, v);
+						if (old != null)
+							throw new IllegalArgumentException();
+					} , nextOverrides, (p1) -> true, "" /* FIXME */);
 
 					p.collectionTableProperties = properties2.values();
 

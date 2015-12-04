@@ -58,7 +58,11 @@ public class DataModelCreator {
 	DatabaseModel dm;
 
 	String columnName(JpaProperty p) {
-		return (p.column != null && !Strings.isNullOrEmpty(p.column.name)) ? p.column.name : p.name;
+		return (p.column != null && !Strings.isNullOrEmpty(p.column.name)) ? p.column.name : removeLead(p.name);
+	}
+
+	static String removeLead(String s) {
+		return s.substring(s.lastIndexOf('.') + 1);
 	}
 
 	ColumnId columnId(TableId tableId, JpaProperty p) {
@@ -109,10 +113,6 @@ public class DataModelCreator {
 
 		Optional<JpaProperty> reverse = ja.properties.values().stream()
 				.filter((p1) -> p1.manytomany != null && Objects.equals(p1.manytomany.mappedBy, p.name)).findFirst();
-		System.err.println("REVERSE " + reverse);
-		if (!reverse.isPresent())
-			ja.properties.values().stream()
-					.forEach(p1 -> System.err.println(className + " " + p1.manytomany + " " + p.name));
 
 		TableModel em = TableModel.create(createTableId(p.joinTable, className.substring(className.lastIndexOf('.') + 1)
 				+ "_" + className2.substring(className2.lastIndexOf('.') + 1)));
@@ -120,13 +120,14 @@ public class DataModelCreator {
 		List<JpaProperty> idProperties = collection.stream().filter((q) -> q.id).collect(Collectors.toList());
 
 		em = addKeyReference(em, idProperties, p.joinTable != null ? p.joinTable.joinColumns : null,
-				(x) -> (reverse.isPresent() ? reverse.get().name : p.name) + "_" + columnName(x));
+				(x) -> /* FIXME */ removeLead((reverse.isPresent() ? reverse.get().name : p.name)) + "_"
+						+ columnName(x));
 
 		idProperties = ja.properties.values().stream().filter((q) -> q.id).collect(Collectors.toList());
 
 		em = addKeyReference(em, idProperties, p.joinTable != null ? p.joinTable.inverseJoinColumns : null,
-				(x) -> (reverse.isPresent() ? p.name : className.substring(className.lastIndexOf('.') + 1)) + "_"
-						+ columnName(x));
+				(x) -> (reverse.isPresent() ? /* FIXME */removeLead(p.name)
+						: className.substring(className.lastIndexOf('.') + 1)) + "_" + columnName(x));
 
 		dm = dm.addTable(em);
 	}
@@ -153,7 +154,7 @@ public class DataModelCreator {
 							.collect(Collectors.toList());
 
 					tableModel = addKeyReference(tableModel, idProperties, p.joinColumns,
-							(oname) -> p.name + "_" + oname.name);
+							(oname) -> /* FIXME */ removeLead(p.name) + "_" + oname.name);
 				}
 
 				break;
@@ -171,7 +172,7 @@ public class DataModelCreator {
 						.collect(Collectors.toList());
 
 				tableModel = addKeyReference(tableModel, idProperties, p.joinColumns,
-						(oname) -> p.name + "_" + oname.name);
+						(oname) -> /* FIXME */ removeLead(p.name) + "_" + oname.name);
 
 				break;
 			case ONE_TO_MANY:
