@@ -38,6 +38,13 @@
 			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.ibm.db2</groupId>
+			<artifactId>jcc</artifactId>
+			<version>4.13.127</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

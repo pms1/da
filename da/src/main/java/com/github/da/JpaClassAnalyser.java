@@ -106,12 +106,9 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 			Type t = Type.getType(desc);
 			AV1 outer = this;
 
-			System.err.println("XXX VISIT ANN " + name + " " + desc);
-
 			return new AV1() {
 				@Override
 				public void visitEnd() {
-					System.err.println("XXX END1 " + this + " " + outer + " " + fin);
 					if (outerName == null) {
 						outer.anon(t, new Anno(t, fin));
 					} else {
@@ -180,8 +177,6 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 					if (fin.size() != 0)
 						throw new Error();
 
-					System.err.println(
-							"XXX END2 " + this + " " + outer + " -- " + name + " " + anonType + " " + anon + " " + fin);
 					if (anonType == null && anon.size() == 0)
 						outer.add(new Ann(name));
 					else
@@ -256,6 +251,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 	static final Type javaxPersistenceTemporal = Type.getObjectType("javax/persistence/Temporal");
 	static final Type javaxPersistenceOrderBy = Type.getObjectType("javax/persistence/OrderBy");
 	static final Type javaxPersistenceLob = Type.getObjectType("javax/persistence/Lob");
+	static final Type javaxPersistenceMapKey = Type.getObjectType("javax/persistence/MapKey");
 	static final Type javaxPersistenceElementCollection = Type.getObjectType("javax/persistence/ElementCollection");
 	static final Type javaxPersistenceCollectionTable = Type.getObjectType("javax/persistence/CollectionTable");
 	static final Type javaxPersistencePrePersist = Type.getObjectType("javax/persistence/PrePersist");
@@ -524,8 +520,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 							} else if (t.equals(javaxPersistenceTable)) {
 								result.setTable(genericParse(TableAnnotation.class, fin));
 							} else if (t.equals(javaxPersistenceAccess)) {
-								genericParse(AccessAnnotation.class, fin);
-								result.setAccess(JpaAccess.valueOf((String) fin.get("value").value));
+								result.setAccess(genericParse(AccessAnnotation.class, fin).value);
 							} else if (t.equals(cacheable)) {
 							} else if (t.equals(mappedSuperclass)) {
 								result.setMappedSuperclass();
@@ -547,7 +542,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				} else if (t.equals(javaxPersistenceId)) {
 					property.setId(true);
 				} else if (t.equals(javaxPersistenceAccess)) {
-					property.setAccess(JpaAccess.valueOf((String) fin.get("value").value));
+					property.setAccess(genericParse(AccessAnnotation.class, fin).value);
 				} else if (t.equals(javaxPersistenceEmbedded)) {
 					property.setFieldType(FieldType.EMBEDDED);
 				} else if (t.equals(javaxPersistenceAttributeOverride)) {
@@ -592,14 +587,13 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				} else if (t.equals(javaxPersistenceMapsId)) {
 				} else if (t.equals(javaxPersistencePrimaryKeyJoinColumns)) {
 				} else if (t.equals(javaxPersistenceTemporal)) {
-				} else if (t.equals(javaxPersistenceAccess)) {
-					property.setAccess(JpaAccess.valueOf((String) fin.get("value").value));
 				} else if (t.equals(javaxPersistenceOrderBy)) {
 				} else if (t.equals(javaxPersistenceLob)) {
 				} else if (t.equals(javaxPersistenceElementCollection)) {
 					property.setFieldType(FieldType.ELEMENT_COLLECTION);
 				} else if (t.equals(javaxPersistenceCollectionTable)) {
 					property.setCollectionTable(genericParse(CollectionTableAnnotation.class, fin));
+				} else if (t.equals(javaxPersistenceMapKey)) {
 				} else {
 					return false;
 				}
@@ -618,41 +612,6 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				r.fieldProperties = fieldProperties;
 				assert methodProperties != null;
 				r.methodProperties = methodProperties;
-				// if (result.getAccess() == null) {
-				// switch (result.getKind()) {
-				// case ENTITY:
-				// if (methodProperties.values().stream().filter(p ->
-				// p.id).findAny().isPresent()) {
-				// result.setAccess(JpaAccess.PROPERTY);
-				// } else if (fieldProperties.values().stream().filter(p ->
-				// p.id).findAny().isPresent()) {
-				// result.setAccess(JpaAccess.FIELD);
-				// } else {
-				// throw new Error();
-				// }
-				// break;
-				// case EMBEDDABLE:
-				// result.setAccess(JpaAccess.PROPERTY);
-				// break;
-				// }
-				// }
-				//
-				// switch (result.getAccess()) {
-				// case FIELD:
-				// result.properties =
-				// fieldProperties.entrySet().stream().filter(p ->
-				// !p.getValue().trans)
-				// .collect(Collectors.toMap(e -> e.getKey(), e ->
-				// e.getValue()));
-				// break;
-				// case PROPERTY:
-				// result.properties =
-				// methodProperties.entrySet().stream().filter(p ->
-				// !p.getValue().trans)
-				// .collect(Collectors.toMap(e -> e.getKey(), e ->
-				// e.getValue()));
-				// break;
-				// }
 
 				bean.add(JpaAnalysisResult.class, result);
 				bean.add(TResult.class, r);
@@ -662,7 +621,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 			public MethodVisitor visitMethod(int access, String name, String desc, String signature,
 					String[] exceptions) {
 
-				// omit methods builds for generics
+				// omit methods generated by the compiler for generics
 				if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
 					return null;
 				}
@@ -692,8 +651,6 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				}
 
 				return new MethodVisitor(Opcodes.ASM5) {
-					boolean col = false;
-
 					@Override
 					public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
 						System.err.println("JPA VISIT ANN METHOD " + desc);
@@ -704,7 +661,6 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 								public void visitEnd() {
 									if (!anon.isEmpty())
 										throw new Error();
-									System.err.println("F " + t + " " + fin);
 									if (handlePropertyAnnotation(t, property, fin)) {
 									} else if (t.equals(javaxPersistencePrePersist)) {
 									} else if (t.equals(javaxPersistencePreUpdate)) {
@@ -749,8 +705,6 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				return new FieldVisitor(Opcodes.ASM5) {
 					@Override
 					public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-						System.err.println("JPA VISIT ANN FIELD " + desc);
-
 						Type t = Type.getType(desc);
 						if (t.getClassName().startsWith("javax.persistence.")) {
 							return new AV1() {
@@ -801,13 +755,13 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 		return findId(ch, t2, e);
 	}
 
-	void collectProperties(ClassHierarchy ch, ClassModel t, JpaAccess a, Consumer<JpaProperty> dest,
+	void collectProperties(ClassHierarchy ch, ClassModel t, JpaAccess defaultJpaAccess, Consumer<JpaProperty> dest,
 			Map<String, ColumnAnnotation> overrides, Predicate<JpaAnalysisResult> filter, String prefix) {
 		Objects.requireNonNull(t);
 
 		ClassModel t2 = ch.get(t.getSuperType().getRawType());
 		if (t2 != null) {
-			collectProperties(ch, t2, a, dest, overrides, p -> p.isMappedSuperclass(), prefix);
+			collectProperties(ch, t2, defaultJpaAccess, dest, overrides, p -> p.isMappedSuperclass(), prefix);
 		}
 
 		TResult r = t.get(TResult.class);
@@ -821,14 +775,18 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 		if (!filter.test(result))
 			return;
 
-		Map<String, ? extends JpaProperty> props;
+		Map<String, JpaProperty> props;
 
-		switch (a) {
+		switch (result.getAccess() != null ? result.getAccess() : defaultJpaAccess) {
 		case FIELD:
 			props = r.fieldProperties;
+			r.methodProperties.values().stream().filter(p -> p.access == JpaAccess.PROPERTY)
+					.forEach((p) -> props.put(p.name, p));
 			break;
 		case PROPERTY:
 			props = r.methodProperties;
+			r.fieldProperties.values().stream().filter(p -> p.access == JpaAccess.FIELD)
+					.forEach((p) -> props.put(p.name, p));
 			break;
 		default:
 			throw new Error();
@@ -852,7 +810,8 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				t2 = ch.get(e.getValue().type);
 				Map<String, ColumnAnnotation> nextOverrides;
 				nextOverrides = createOverride(overrides, e.getKey(), e.getValue().attributeOverrides);
-				collectProperties(ch, t2, a, dest, nextOverrides, (p) -> true, joinPrefix(prefix, e.getValue().name));
+				collectProperties(ch, t2, defaultJpaAccess, dest, nextOverrides, (p) -> true,
+						joinPrefix(prefix, e.getValue().name));
 				break;
 			default:
 				System.err.println("UNHANDLED");

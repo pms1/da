@@ -3,10 +3,12 @@ package com.github.da;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -95,7 +97,7 @@ public class DataModelCreator {
 		em = addKeyReference(em, idProperties, p.joinTable != null ? p.joinTable.inverseJoinColumns : null,
 				(x) -> className.substring(className.lastIndexOf('.') + 1) + "_" + x.name);
 
-		dm = dm.addTable(em);
+		updateTable(em);
 	}
 
 	void createJoinTableMany(JpaProperty p, String className, Collection<JpaProperty> collection) {
@@ -129,7 +131,7 @@ public class DataModelCreator {
 				(x) -> (reverse.isPresent() ? /* FIXME */removeLead(p.name)
 						: className.substring(className.lastIndexOf('.') + 1)) + "_" + columnName(x));
 
-		dm = dm.addTable(em);
+		updateTable(em);
 	}
 
 	public TableModel addColumns(TableModel tableModel, String className, Collection<JpaProperty> collection) {
@@ -176,7 +178,24 @@ public class DataModelCreator {
 
 				break;
 			case ONE_TO_MANY:
-				if (Strings.isNullOrEmpty(p.onetomany.mappedBy)) {
+				other = ch.get(p.elementType);
+				if (other == null)
+					throw new Error("no type : " + p.elementType);
+				ja = other.get(JpaAnalysisResult.class);
+				if (ja == null)
+					throw new Error();
+				if (!ja.isEntity())
+					throw new Error();
+				if (p.joinColumns != null) {
+					TableId target = createTableId(ja);
+
+					TableModel t1 = TableModel.create(target);
+					idProperties = collection.stream().filter((q) -> q.id).collect(Collectors.toList());
+					t1 = addKeyReference(t1, idProperties, p.joinColumns, (oname) -> {
+						throw new Error();
+					});
+					updateTable(t1);
+				} else if (Strings.isNullOrEmpty(p.onetomany.mappedBy)) {
 					createJoinTable(p, className, collection);
 				}
 				break;
@@ -208,7 +227,7 @@ public class DataModelCreator {
 					em = TableModel.Transformations.addColumn(em, cm);
 				}
 
-				dm = dm.addTable(em);
+				updateTable(em);
 				break;
 			default:
 				break;
@@ -220,8 +239,6 @@ public class DataModelCreator {
 
 	private TableModel addKeyReference(TableModel em, List<JpaProperty> idProperties,
 			List<JoinColumnAnnotation> joinColumns, Function<JpaProperty, String> defaultGenerator) {
-		TableId tableId = em.getId();
-
 		Map<String, String> jc;
 
 		if (joinColumns != null) {
@@ -236,13 +253,12 @@ public class DataModelCreator {
 		for (JpaProperty q : idProperties) {
 
 			String oname = columnName(q);
-			// String name = className.substring(className.lastIndexOf('.') + 1)
-			// + "_" + oname;
-			String name = defaultGenerator.apply(q);
+			String name;
 
 			if (idProperties.size() == 1) {
 				switch (jc.size()) {
 				case 0:
+					name = defaultGenerator.apply(q);
 					break;
 				case 1:
 					name = Iterables.getOnlyElement(jc.values());
@@ -253,10 +269,12 @@ public class DataModelCreator {
 			} else if (idProperties.size() == jc.size()) {
 				String newName = jc.get(oname.toLowerCase());
 				if (newName == null)
-					throw new Error("name=" + name + " " + jc);
+					throw new Error("name=" + oname + " " + jc);
 				name = newName;
 			} else if (jc.size() != 0) {
 				throw new Error();
+			} else {
+				name = defaultGenerator.apply(q);
 			}
 			ColumnModel cm = ColumnModel.create(ColumnId.create(em.getId(), name));
 			em = TableModel.Transformations.addColumn(em, cm);
@@ -268,6 +286,10 @@ public class DataModelCreator {
 
 	public static DatabaseModel create(ClassHierarchy ch) {
 		return new DataModelCreator(ch).create2();
+	}
+
+	TableId createTableId(JpaAnalysisResult r) {
+		return createTableId(r.getTable(), removeLead(r.clazz.type.getClassName()));
 	}
 
 	public DatabaseModel create2() {
@@ -282,15 +304,60 @@ public class DataModelCreator {
 			if (!r.isEntity())
 				continue;
 
-			TableId t = createTableId(r.getTable(),
-					r.clazz.type.getClassName().substring(r.clazz.type.getClassName().lastIndexOf('.') + 1));
+			TableId t = createTableId(r);
+			System.err.println("C " + c + " ->  " + t);
 
 			TableModel tableModel = TableModel.create(t);
 			tableModel = addColumns(tableModel, r.clazz.type.getClassName(), r.properties.values());
-
-			dm = dm.addTable(tableModel);
+			updateTable(tableModel);
 		}
 
 		return dm;
+	}
+
+	private void updateTable(TableModel tableModel) {
+		TableModel old = dm.getTable(tableModel.getId());
+		tableModel = merge(old, tableModel);
+
+		if (old != null)
+			dm = dm.removeTable(old.getId());
+		dm = dm.addTable(tableModel);
+	}
+
+	private TableModel merge(TableModel t1, TableModel t2) {
+		if (t1 != null && t2 == null)
+			return t1;
+		else if (t1 == null && t2 != null)
+			return t2;
+
+		Set<ColumnId> cols = new HashSet<>();
+
+		Map<ColumnId, ColumnModel> cols1 = t1.getColumnsAsMap();
+		Map<ColumnId, ColumnModel> cols2 = t2.getColumnsAsMap();
+
+		cols1.values().stream().map(ColumnModel::getId).forEach(cols::add);
+		cols2.values().stream().map(ColumnModel::getId).forEach(cols::add);
+
+		TableModel t = TableModel.create(t1.getId());
+
+		for (ColumnId c : cols) {
+			ColumnModel c1 = cols1.get(c);
+			ColumnModel c2 = cols2.get(c);
+			if (c1 != null && c2 == null) {
+				t = TableModel.Transformations.addColumn(t, c1);
+			} else if (c1 == null && c2 != null) {
+				t = TableModel.Transformations.addColumn(t, c2);
+			} else {
+				t = TableModel.Transformations.addColumn(t, merge(c1, c2));
+			}
+		}
+
+		return t;
+	}
+
+	private ColumnModel merge(ColumnModel c1, ColumnModel c2) {
+		Objects.requireNonNull(c1);
+		Objects.requireNonNull(c2);
+		return c1;
 	}
 }

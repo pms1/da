@@ -2,10 +2,12 @@ package sql;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TableModel {
 	private final TableId id;
@@ -41,6 +43,8 @@ public class TableModel {
 		}
 
 		static public TableModel addColumn(TableModel tm, ColumnModel m) {
+			Objects.requireNonNull(tm);
+			Objects.requireNonNull(m);
 			if (!m.getId().getTable().equals(tm.getId()))
 				throw new IllegalArgumentException();
 			if (tm.columns.containsKey(m.getId()))
@@ -55,7 +59,19 @@ public class TableModel {
 		return new ArrayList<>(columns.values());
 	}
 
+	public Map<ColumnId, ColumnModel> getColumnsAsMap() {
+		return new HashMap<>(columns);
+	}
+
 	public ColumnModel getColumn(ColumnId t) {
 		return columns.get(t);
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder b = new StringBuilder();
+		b.append("TableModel(" + id + ",");
+		b.append(columns.keySet().stream().map(ColumnId::getName).collect(Collectors.joining(",")));
+		return b.toString();
 	}
 }
