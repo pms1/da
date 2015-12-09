@@ -5,16 +5,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
-
-import org.objectweb.asm.Type;
 
 public class RootApplication {
 
@@ -26,7 +22,10 @@ public class RootApplication {
 	@Any
 	Instance<ClassAnazlyer> cp;
 
-	public ClassHierarchy run(String[] args) throws IOException {
+	@Inject
+	AnalysisResult ar;
+
+	public void run(String[] args) throws IOException {
 		// TODO Auto-generated method stub
 
 		for (String arg : args) {
@@ -51,24 +50,14 @@ public class RootApplication {
 			}
 		}
 
-		ClassHierarchy ch = new ClassHierarchy() {
+		ClassHierarchy ch = new ClassHierarchy();
 
-			@Override
-			public ClassModel get(Type t) {
-				return ClassProcessor.classes.get(t);
-			}
-
-			@Override
-			public Collection<ClassModel> getClasses() {
-				return new ArrayList<>(ClassProcessor.classes.values());
-			};
-		};
 		for (ClassModel e : ClassProcessor.classes.values()) {
 			for (ClassAnazlyer cp1 : cp)
 				cp1.phase2(e, ch);
 		}
 
-		return ch;
+		ar.put(ClassHierarchy.class, ch);
 	}
 
 }

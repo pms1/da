@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,6 +12,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
@@ -21,13 +24,24 @@ import sql.DatabaseModel;
 import sql.SchemaId;
 import sql.TableId;
 import sql.TableModel;
+import sql.types.IntType;
+import sql.types.SqlType;
 
-public class DataModelCreator {
-	private final ClassHierarchy ch;
+public class DataModelCreator implements Analyser {
+	@Inject
+	ClassHierarchy ch;
 
-	public DataModelCreator(ClassHierarchy ch) {
-		Objects.requireNonNull(ch);
-		this.ch = ch;
+	@Inject
+	Resolver resolve;
+
+	List<TypeMapper> typeMappers;
+
+	@Inject
+	void setConfig(DataModelCreatorConfig config) {
+		List<TypeMapper> typeMappers = new LinkedList<>();
+		config.getTypeMappers().stream().map(p -> resolve.resolve(p)).forEach(typeMappers::add);
+		// mappers.add();
+		this.typeMappers = typeMappers;
 	}
 
 	static TableId createTableId(String overrideSchema, String overrideTable, String defaultTable) {
@@ -134,12 +148,33 @@ public class DataModelCreator {
 		updateTable(em);
 	}
 
+	ColumnModel.Builder addColumnType(ColumnModel.Builder builder, JpaProperty p) {
+		if (p.type == null || p.type2 == null)
+			throw new Error();
+
+		SqlType t = null;
+		for (TypeMapper typeMapper : typeMappers) {
+			t = typeMapper.map(ch, p);
+			if (t != null)
+				break;
+		}
+		if (t == null)
+			throw new Error("unmapped: " + p);
+
+		if (t != null)
+			builder = builder.withType(t);
+
+		return builder;
+	}
+
 	public TableModel addColumns(TableModel tableModel, String className, Collection<JpaProperty> collection) {
 		for (JpaProperty p : collection) {
 			switch (p.fieldType) {
 			case VALUE:
-				ColumnModel cm = ColumnModel.create(columnId(tableModel.getId(), p));
-				tableModel = TableModel.Transformations.addColumn(tableModel, cm);
+				ColumnModel.Builder b = ColumnModel.newBuilder();
+				b = b.withId(columnId(tableModel.getId(), p));
+				b = addColumnType(b, p);
+				tableModel = TableModel.Transformations.addColumn(tableModel, b.build());
 				break;
 			case ONE_TO_ONE:
 				ClassModel other = ch.get(p.type);
@@ -223,8 +258,10 @@ public class DataModelCreator {
 						name = p.name + "_ORDER";
 					}
 
-					cm = ColumnModel.create(ColumnId.create(em.getId(), name));
-					em = TableModel.Transformations.addColumn(em, cm);
+					b = ColumnModel.newBuilder();
+					b = b.withId(ColumnId.create(em.getId(), name));
+					b = b.withType(IntType.create());
+					em = TableModel.Transformations.addColumn(em, b.build());
 				}
 
 				updateTable(em);
@@ -276,23 +313,24 @@ public class DataModelCreator {
 			} else {
 				name = defaultGenerator.apply(q);
 			}
-			ColumnModel cm = ColumnModel.create(ColumnId.create(em.getId(), name));
-			em = TableModel.Transformations.addColumn(em, cm);
+			ColumnModel.Builder b = ColumnModel.newBuilder();
+			b = b.withId(ColumnId.create(em.getId(), name));
+			b = addColumnType(b, q);
+			em = TableModel.Transformations.addColumn(em, b.build());
 
 		}
 
 		return em;
 	}
 
-	public static DatabaseModel create(ClassHierarchy ch) {
-		return new DataModelCreator(ch).create2();
-	}
-
 	TableId createTableId(JpaAnalysisResult r) {
 		return createTableId(r.getTable(), removeLead(r.clazz.type.getClassName()));
 	}
 
-	public DatabaseModel create2() {
+	@Inject
+	AnalysisResult ar;
+
+	public void run() {
 
 		dm = DatabaseModel.create();
 
@@ -305,14 +343,13 @@ public class DataModelCreator {
 				continue;
 
 			TableId t = createTableId(r);
-			System.err.println("C " + c + " ->  " + t);
 
 			TableModel tableModel = TableModel.create(t);
 			tableModel = addColumns(tableModel, r.clazz.type.getClassName(), r.properties.values());
 			updateTable(tableModel);
 		}
 
-		return dm;
+		ar.put(DatabaseModel.class, dm);
 	}
 
 	private void updateTable(TableModel tableModel) {
@@ -358,6 +395,10 @@ public class DataModelCreator {
 	private ColumnModel merge(ColumnModel c1, ColumnModel c2) {
 		Objects.requireNonNull(c1);
 		Objects.requireNonNull(c2);
+
+		if (!Objects.equals(c1.getType(), c2.getType()))
+			throw new Error();
+
 		return c1;
 	}
 }

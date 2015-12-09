@@ -16,7 +16,7 @@ import sql.SchemaId;
 import sql.TableId;
 import sql.TableModel;
 
-public class TM {
+public class MyPUH2 {
 
 	static class Holder {
 		static final DatabaseModel dm;
@@ -42,37 +42,43 @@ public class TM {
 						.getConnection("jdbc:h2:mem:" + "test" + ";DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
 
 				System.err.println("---\n" + writer + "---\n");
-				for (String s : writer.toString().split("\r?\n"))
+				for (String s : writer.toString().split("\r?\n")) {
 					connection.createStatement().execute(s);
-
-				DatabaseMetaData metaData = connection.getMetaData();
-
-				DatabaseModel m = DatabaseModel.create();
-
-				ResultSet resultSet = metaData.getTables("TEST", null, null, null);
-				while (resultSet.next()) {
-					String c = resultSet.getString("TABLE_CAT");
-					String s = resultSet.getString("TABLE_SCHEMA");
-					String n = resultSet.getString("TABLE_NAME");
-
-					if (s.equals("INFORMATION_SCHEMA"))
-						continue;
-
-					m = m.addTable(TableModel.create(TableId.create(SchemaId.create(s), n)));
+					System.err.println();
 				}
 
-				resultSet = metaData.getColumns("TEST", null, null, null);
-				while (resultSet.next()) {
-					String c = resultSet.getString("TABLE_CAT");
-					String s = resultSet.getString("TABLE_SCHEMA");
-					String n = resultSet.getString("TABLE_NAME");
+				DatabaseModel m = new H2ModelReader().read(connection);
+				if (false) {
+					DatabaseMetaData metaData = connection.getMetaData();
 
-					if (s.equals("INFORMATION_SCHEMA"))
-						continue;
+					m = DatabaseModel.create();
 
-					String col = resultSet.getString("COLUMN_NAME");
+					ResultSet resultSet = metaData.getTables("TEST", null, null, null);
+					while (resultSet.next()) {
+						String c = resultSet.getString("TABLE_CAT");
+						String s = resultSet.getString("TABLE_SCHEMA");
+						String n = resultSet.getString("TABLE_NAME");
 
-					m = m.addColumn(ColumnModel.create(ColumnId.create(TableId.create(SchemaId.create(s), n), col)));
+						if (s.equals("INFORMATION_SCHEMA"))
+							continue;
+
+						m = m.addTable(TableModel.create(TableId.create(SchemaId.create(s), n)));
+					}
+
+					resultSet = metaData.getColumns("TEST", null, null, null);
+					while (resultSet.next()) {
+						String c = resultSet.getString("TABLE_CAT");
+						String s = resultSet.getString("TABLE_SCHEMA");
+						String n = resultSet.getString("TABLE_NAME");
+
+						if (s.equals("INFORMATION_SCHEMA"))
+							continue;
+
+						String col = resultSet.getString("COLUMN_NAME");
+
+						m = m.addColumn(
+								ColumnModel.create(ColumnId.create(TableId.create(SchemaId.create(s), n), col)));
+					}
 				}
 
 				dm = m;

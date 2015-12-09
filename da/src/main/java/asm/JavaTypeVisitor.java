@@ -18,6 +18,38 @@ public interface JavaTypeVisitor<T> {
 		return visit((JavaType) baseType);
 	}
 
+	default T visitBoolean(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitByte(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitChar(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitFloat(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitDouble(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitInt(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitLong(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
+	default T visitShort(BaseType baseType) {
+		return visit((BaseType) baseType);
+	}
+
 	default T visit(ParameterizedType parametrizedType) {
 		return visit((ClassType) parametrizedType);
 	}

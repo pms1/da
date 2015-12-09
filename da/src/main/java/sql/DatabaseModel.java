@@ -38,6 +38,10 @@ public class DatabaseModel {
 		}
 	}
 
+	public boolean hasTable(TableId id) {
+		return tables.containsKey(id);
+	}
+
 	public DatabaseModel addTable(TableModel tm) {
 		Objects.requireNonNull(tm);
 

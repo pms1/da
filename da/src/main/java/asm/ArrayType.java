@@ -21,4 +21,13 @@ public class ArrayType extends JavaType {
 		return visitor.visit(this);
 	}
 
+	public JavaType getContentType() {
+		return contentType;
+	}
+
+	@Override
+	public String toString() {
+		return asJava();
+	}
+
 }

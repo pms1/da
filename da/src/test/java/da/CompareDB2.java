@@ -40,10 +40,10 @@ import sql.SchemaId;
 import sql.TableId;
 import sql.TableModel;
 
-public class TM1 {
+public class CompareDB2 {
 	public static void main(String[] args) throws URISyntaxException, IOException {
 		try {
-			DatabaseModel hib = MyPUH2.Holder.dm;
+			DatabaseModel hib = MyPUDB2.Holder.dm;
 
 			Class<?> c = Bottom1.class;
 			Path p = findDir(c);
@@ -58,7 +58,7 @@ public class TM1 {
 			DatabaseModel dm = ar.get(DatabaseModel.class);
 
 			Comparator c1 = new Comparator("hib", i -> {
-				if (i.getSchema().equals(SchemaId.create("PUBLIC")))
+				if (i.getSchema().equals(SchemaId.create("DB2ADMIN")))
 					return TableId.create(SchemaId.anonymous(), i.getName());
 				else
 					return i;

@@ -2,13 +2,10 @@ package da;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Objects;
-
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 import sql.ColumnId;
 import sql.ColumnModel;
@@ -16,9 +13,24 @@ import sql.DatabaseModel;
 import sql.SchemaId;
 import sql.TableId;
 import sql.TableModel;
+import sql.types.BLOBType;
+import sql.types.BigIntType;
+import sql.types.BooleanType;
+import sql.types.CLOBType;
+import sql.types.CharType;
+import sql.types.DateType;
+import sql.types.DecimalType;
+import sql.types.DoubleType;
+import sql.types.IntType;
+import sql.types.SmallIntType;
+import sql.types.TimeType;
+import sql.types.TimestampType;
+import sql.types.TinyIntType;
+import sql.types.VarbinaryType;
+import sql.types.VarcharType;
 
-public class ModelReader {
-	DatabaseModel read(Connection connection) throws SQLException {
+public abstract class ModelReader {
+	final DatabaseModel read(Connection connection) throws SQLException {
 		DatabaseMetaData metaData = connection.getMetaData();
 
 		DatabaseModel m = DatabaseModel.create();
@@ -45,9 +57,72 @@ public class ModelReader {
 				String s = resultSet.getString("TABLE_SCHEM");
 				String n = resultSet.getString("TABLE_NAME");
 
+				TableId tableId = TableId.create(SchemaId.create(s), n);
+				if (!m.hasTable(tableId))
+					continue;
+
 				String col = resultSet.getString("COLUMN_NAME");
 
-				m = m.addColumn(ColumnModel.create(ColumnId.create(TableId.create(SchemaId.create(s), n), col)));
+				int dataType = resultSet.getInt("DATA_TYPE");
+				int columnSize = resultSet.getInt("COLUMN_SIZE");
+				int decimalDigits = resultSet.getInt("DECIMAL_DIGITS");
+				int numPrecRadix = resultSet.getInt("NUM_PREC_RADIX");
+				ColumnModel.Builder cm = ColumnModel.newBuilder();
+
+				cm = cm.withId(ColumnId.create(tableId, col));
+
+				JDBCType dataType2 = JDBCType.valueOf(dataType);
+
+				switch (dataType2) {
+				case BIGINT:
+					cm = cm.withType(BigIntType.create());
+					break;
+				case BOOLEAN:
+					cm = cm.withType(BooleanType.create());
+					break;
+				case CHAR:
+					cm = cm.withType(CharType.create());
+					break;
+				case BLOB:
+					cm = cm.withType(BLOBType.create());
+					break;
+				case CLOB:
+					cm = cm.withType(CLOBType.create());
+					break;
+				case DATE:
+					cm = cm.withType(DateType.create());
+					break;
+				case DECIMAL:
+					cm = cm.withType(DecimalType.create());
+					break;
+				case DOUBLE:
+					cm = cm.withType(DoubleType.create());
+					break;
+				case INTEGER:
+					cm = cm.withType(IntType.create());
+					break;
+				case SMALLINT:
+					cm = cm.withType(SmallIntType.create());
+					break;
+				case VARCHAR:
+					cm = cm.withType(VarcharType.create());
+					break;
+				case TIME:
+					cm = cm.withType(TimeType.create());
+					break;
+				case TIMESTAMP:
+					cm = cm.withType(TimestampType.create());
+					break;
+				case TINYINT:
+					cm = cm.withType(TinyIntType.create());
+					break;
+				case VARBINARY:
+					cm = cm.withType(VarbinaryType.create());
+					break;
+				default:
+					throw new Error("missing type " + dataType + " " + dataType2);
+				}
+				m = m.addColumn(cm.build());
 			}
 		}
 
@@ -56,33 +131,11 @@ public class ModelReader {
 		return m;
 	}
 
-	private boolean ignore(String c, String s, String n) {
-		return s.equals("SYSTOOLS");
+	boolean ignore(String c, String s, String n) {
+		return false;
 	}
 
-	private DatabaseModel postProcess(Connection connection, DatabaseModel m) throws SQLException {
-		try (Statement statement = connection.createStatement()) {
-			if (!statement.execute(
-					"select rtrim(tabschema),tabname,rtrim(base_tabschema),base_tabname from syscat.tables where ownertype != 'S' and type = 'A'"))
-				throw new Error();
-
-			Multimap<TableId, TableId> aliases = HashMultimap.create();
-			try (ResultSet resultSet = statement.getResultSet()) {
-				while (resultSet.next()) {
-					String tabschema = resultSet.getString(1);
-					String tabname = resultSet.getString(2);
-					String base_tabschema = resultSet.getString(3);
-					String base_tabname = resultSet.getString(4);
-
-					TableId id = TableId.create(SchemaId.create(base_tabschema), base_tabname);
-					TableId alias = TableId.create(SchemaId.create(tabschema), tabname);
-
-					m = m.addAlias(id, alias);
-				}
-			}
-
-		}
-
+	DatabaseModel postProcess(Connection connection, DatabaseModel m) throws SQLException {
 		return m;
 	}
 }

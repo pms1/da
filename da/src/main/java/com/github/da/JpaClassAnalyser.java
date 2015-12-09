@@ -200,8 +200,11 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 	static final Type javaLangObject = Type.getObjectType("java/lang/Object");
 
 	static final Type javaLangBoolean = Type.getObjectType("java/lang/Boolean");
+	static final Type javaLangByte = Type.getObjectType("java/lang/Byte");
+	static final Type javaLangCharacter = Type.getObjectType("java/lang/Character");
 	static final Type javaLangEnum = Type.getObjectType("java/lang/Enum");
 	static final Type javaLangDouble = Type.getObjectType("java/lang/Double");
+	static final Type javaLangFloat = Type.getObjectType("java/lang/Float");
 	static final Type javaLangInteger = Type.getObjectType("java/lang/Integer");
 	static final Type javaLangLong = Type.getObjectType("java/lang/Long");
 	static final Type javaLangString = Type.getObjectType("java/lang/String");
@@ -210,6 +213,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 
 	static final Type javaUtilDate = Type.getObjectType("java/util/Date");
 
+	static final Type javaSqlDate = Type.getObjectType("java/sql/Date");
 	static final Type javaSqlTime = Type.getObjectType("java/sql/Time");
 
 	static final Type orgJodaTimeDateTime = Type.getObjectType("org/joda/time/DateTime");
@@ -557,6 +561,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				} else if (t.equals(javaxPersistenceTransient)) {
 					property.setTransient(true);
 				} else if (t.equals(javaxPersistenceEnumerated)) {
+					property.setEnumType(genericParse(EnumeratedAnnotation.class, fin).value);
 				} else if (t.equals(javaxPersistenceManyToOne)) {
 					property.setFieldType(FieldType.MANY_TO_ONE);
 					property.setManyToOne(genericParse(ManyToOneAnnotation.class, fin));
@@ -587,8 +592,11 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 				} else if (t.equals(javaxPersistenceMapsId)) {
 				} else if (t.equals(javaxPersistencePrimaryKeyJoinColumns)) {
 				} else if (t.equals(javaxPersistenceTemporal)) {
+					property.setTemporalType(genericParse(TemporalAnnotation.class, fin).value);
 				} else if (t.equals(javaxPersistenceOrderBy)) {
 				} else if (t.equals(javaxPersistenceLob)) {
+					genericParse(LobAnnotation.class, fin);
+					property.setLob(true);
 				} else if (t.equals(javaxPersistenceElementCollection)) {
 					property.setFieldType(FieldType.ELEMENT_COLLECTION);
 				} else if (t.equals(javaxPersistenceCollectionTable)) {
@@ -856,9 +864,17 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 			e.setFieldType(FieldType.VALUE);
 		} else if (TypeUtil.isArrayOf(e.type, Type.BYTE_TYPE)) {
 			e.setFieldType(FieldType.VALUE);
+		} else if (TypeUtil.isArrayOf(e.type, Type.CHAR_TYPE)) {
+			e.setFieldType(FieldType.VALUE);
 		} else if (e.type.equals(javaLangBoolean)) {
 			e.setFieldType(FieldType.VALUE);
+		} else if (e.type.equals(javaLangByte)) {
+			e.setFieldType(FieldType.VALUE);
+		} else if (e.type.equals(javaLangCharacter)) {
+			e.setFieldType(FieldType.VALUE);
 		} else if (e.type.equals(javaLangDouble)) {
+			e.setFieldType(FieldType.VALUE);
+		} else if (e.type.equals(javaLangFloat)) {
 			e.setFieldType(FieldType.VALUE);
 		} else if (e.type.equals(javaLangInteger)) {
 			e.setFieldType(FieldType.VALUE);
@@ -867,6 +883,8 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 		} else if (e.type.equals(javaLangString)) {
 			e.setFieldType(FieldType.VALUE);
 		} else if (e.type.equals(javaUtilDate)) {
+			e.setFieldType(FieldType.VALUE);
+		} else if (e.type.equals(javaSqlDate)) {
 			e.setFieldType(FieldType.VALUE);
 		} else if (e.type.equals(javaSqlTime)) {
 			e.setFieldType(FieldType.VALUE);

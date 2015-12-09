@@ -41,7 +41,26 @@ public class BaseType extends JavaType {
 
 	@Override
 	public <T> T accept(JavaTypeVisitor<T> visitor) {
-		return visitor.visit(this);
+		switch (descriptor) {
+		case 'B':
+			return visitor.visitByte(this);
+		case 'C':
+			return visitor.visitChar(this);
+		case 'D':
+			return visitor.visitDouble(this);
+		case 'F':
+			return visitor.visitFloat(this);
+		case 'I':
+			return visitor.visitInt(this);
+		case 'J':
+			return visitor.visitLong(this);
+		case 'S':
+			return visitor.visitShort(this);
+		case 'Z':
+			return visitor.visitBoolean(this);
+		default:
+			throw new Error(">" + descriptor + "<");
+		}
 	}
 
 }

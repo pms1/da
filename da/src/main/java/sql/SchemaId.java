@@ -44,13 +44,24 @@ public abstract class SchemaId {
 			return "Schema(" + name + ")";
 		}
 
+		@Override
+		public <T> T accept(SchemaIdVisitor<T> visitor) {
+			return visitor.visitName(name);
+		}
+
 	}
 
 	private static final SchemaId anonymous = new SchemaId() {
 		public String toString() {
 			return "Schema()";
+		}
+
+		@Override
+		public <T> T accept(SchemaIdVisitor<T> visitor) {
+			return visitor.visitAnonymous();
 		};
 
 	};
 
+	public abstract <T> T accept(SchemaIdVisitor<T> visitor);
 }

@@ -30,7 +30,7 @@ import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.DataModelCreatorConfig;
 import com.github.da.DeploymentAnalyserMain;
-import com.github.da.HibernateDB2TypeMapper;
+import com.github.da.HibernateH2TypeMapper;
 import com.github.da.HibernateTypeMapper;
 
 import sql.ColumnId;
@@ -40,7 +40,7 @@ import sql.SchemaId;
 import sql.TableId;
 import sql.TableModel;
 
-public class TM1 {
+public class CompareH2 {
 	public static void main(String[] args) throws URISyntaxException, IOException {
 		try {
 			DatabaseModel hib = MyPUH2.Holder.dm;
@@ -50,7 +50,7 @@ public class TM1 {
 			AnalysisConfiguration config = new AnalysisConfiguration();
 			config.what = new String[] { p.toString() };
 			DataModelCreatorConfig dbmodelGen = DataModelCreatorConfig.newBuilder()
-					.withTypeMapper(HibernateDB2TypeMapper.class)//
+					.withTypeMapper(HibernateH2TypeMapper.class)//
 					.withTypeMapper(HibernateTypeMapper.class)//
 					.build();
 			config.withAnalysis(dbmodelGen);

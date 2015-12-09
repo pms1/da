@@ -113,6 +113,24 @@ public class JpaProperty {
 		this.fieldType = fieldType;
 	}
 
+	JpaEnumType enumType;
+
+	void setEnumType(JpaEnumType enumType) {
+		Objects.requireNonNull(enumType);
+		if (this.enumType != null)
+			throw new IllegalStateException();
+		this.enumType = enumType;
+	}
+
+	JpaTemporalType temporalType;
+
+	void setTemporalType(JpaTemporalType temporalType) {
+		Objects.requireNonNull(temporalType);
+		if (this.temporalType != null)
+			throw new IllegalStateException();
+		this.temporalType = temporalType;
+	}
+
 	OrderColumnAnnotation orderColumn;
 
 	void setOrderColumn(OrderColumnAnnotation orderColumn) {
@@ -129,6 +147,15 @@ public class JpaProperty {
 		if (this.joinTable != null)
 			throw new IllegalStateException();
 		this.joinTable = joinTable;
+	}
+
+	Boolean lob;
+
+	void setLob(Boolean lob) {
+		Objects.requireNonNull(lob);
+		if (this.lob != null)
+			throw new IllegalStateException();
+		this.lob = lob;
 	}
 
 	Type type;
@@ -185,6 +212,7 @@ public class JpaProperty {
 			result.collectionTableProperties = new ArrayList<>(collectionTableProperties);
 		result.column = column;
 		result.elementType = elementType;
+		result.enumType = enumType;
 		result.fieldType = fieldType;
 		result.id = id;
 		result.joinColumns = joinColumns;
@@ -194,6 +222,7 @@ public class JpaProperty {
 		result.onetomany = onetomany;
 		result.onetoone = onetoone;
 		result.orderColumn = orderColumn;
+		result.temporalType = temporalType;
 		result.trans = trans;
 		result.type = type;
 		result.type2 = type2;
