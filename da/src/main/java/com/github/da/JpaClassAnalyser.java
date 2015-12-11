@@ -19,6 +19,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import javax.enterprise.inject.Vetoed;
+
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -42,6 +44,7 @@ import asm.RawType;
 import asm.TypeArgument;
 import ts.AsmTypeParser;
 
+@Vetoed
 public class JpaClassAnalyser implements ClassAnazlyer {
 
 	// ( visit | visitEnum | visitAnnotation | visitArray )*

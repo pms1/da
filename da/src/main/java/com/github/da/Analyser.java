@@ -1,5 +1,4 @@
 package com.github.da;
 
-public interface Analyser {
-	void run();
+public interface Analyser<T> {
 }
