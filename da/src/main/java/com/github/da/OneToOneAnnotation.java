@@ -2,7 +2,6 @@ package com.github.da;
 
 import java.util.List;
 
-@AnnotationDataObject
 public class OneToOneAnnotation {
 
 	public String mappedBy;
