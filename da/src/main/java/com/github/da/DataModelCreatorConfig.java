@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @AnaScope
-public class DataModelCreatorConfig extends Analysis {
+public class DataModelCreatorConfig extends Analysis<DataModelCreator> {
 	private final List<Class<? extends TypeMapper>> typeMappers;
 
 	public interface Builder {
@@ -16,7 +16,6 @@ public class DataModelCreatorConfig extends Analysis {
 	private static class BuilderImpl implements Builder {
 		List<Class<? extends TypeMapper>> typeMappers = new LinkedList<>();
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public Builder withTypeMapper(Class<? extends TypeMapper> typeMapper) {
 			this.typeMappers.add(typeMapper);

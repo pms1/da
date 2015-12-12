@@ -1,9 +1,9 @@
 package com.github.da;
 
-public class Analysis {
-	final BeanReference<? extends Analyser> beanReference;
+public class Analysis<T extends Analyser> {
+	final BeanReference<T> beanReference;
 
-	public Analysis(Class<? extends Analyser> clazz) {
+	public Analysis(Class<T> clazz) {
 		this.beanReference = BeanReference.forClass(clazz);
 	}
 }
