@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 import javax.inject.Provider;
 
-public interface JarContentProcessor<T> extends Analyser {
+public interface JarContentProcessor<T> extends Analyser<T> {
 
 	void run(T config, Processors proc, Path p, Provider<InputStream> is) throws IOException;
 }

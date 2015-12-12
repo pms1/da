@@ -13,6 +13,7 @@ import javax.inject.Provider;
 
 import com.google.common.io.ByteStreams;
 
+@Include(JarJarProcessor.class)
 public class JarScanner implements RootAnalysis<JarScannerConfig> {
 
 	@Inject
