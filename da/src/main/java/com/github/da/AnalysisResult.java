@@ -28,7 +28,7 @@ public class AnalysisResult {
 	public <T> T get(Class<T> class1) {
 		T result = (T) data.get(class1);
 		if (result == null)
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("No entry for '" + class1 + "'");
 		return result;
 	}
 }

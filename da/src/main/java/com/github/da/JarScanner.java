@@ -35,6 +35,7 @@ public class JarScanner implements RootAnalysis<JarScannerConfig> {
 
 		});
 
+		if(false)
 		try (InputStream is = Files.newInputStream(config.getPath())) {
 			ZipInputStream zis = new ZipInputStream(is);
 

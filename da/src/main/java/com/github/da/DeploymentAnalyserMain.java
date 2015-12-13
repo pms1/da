@@ -21,6 +21,10 @@ public class DeploymentAnalyserMain {
 	}
 
 	public static AnalysisResult doit(AnalysisConfiguration config) throws IOException {
+		return new DeploymentAnalyserMain().doit2(config);
+	}
+	
+	AnalysisResult doit2(AnalysisConfiguration config) throws IOException {
 		Stopwatch sw = Stopwatch.createStarted();
 		try (Application a = new ApplicationBuilder() //
 				.with(new ConfigurationExtension(config))//
