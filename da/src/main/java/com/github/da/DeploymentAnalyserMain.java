@@ -134,7 +134,7 @@ public class DeploymentAnalyserMain {
 
 			for (Object r : reqs) {
 
-				if (r.getClass().equals(Class.class)) {
+				if (false && r.getClass().equals(Class.class)) {
 					AnalyserMetadata<Object, Analyser<Object>> provider = analysersMetadata.getProvider((Class<?>) r);
 					if (provider == null)
 						throw new Error("no provider for " + r);
@@ -171,8 +171,10 @@ public class DeploymentAnalyserMain {
 						++count;
 					}
 
-					if (count != 1)
-						throw new Error("C=" + count);
+					if (count == 0)
+						throw new Error("No provider for requirement: " + r);
+					else if (count != 1)
+						throw new Error("Multiple providers for requirement: " + r);
 				}
 			}
 		}

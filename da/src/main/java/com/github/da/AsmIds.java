@@ -15,4 +15,18 @@ public final class AsmIds {
 
 		return new ClassId(name);
 	}
+
+	public static MethodId forMethod(String name, String desc) {
+		Type type = Type.getMethodType(desc);
+		Preconditions.checkArgument(type.getSort() == Type.METHOD, "Not a method type: {0}", desc);
+
+		if (name.contains("\t") || desc.contains("\t"))
+			throw new UnsupportedOperationException();
+
+		return new MethodId(name + "\t" + desc);
+	}
+
+	public static FieldId forField(String name) {
+		return new FieldId(name);
+	}
 }
