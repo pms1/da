@@ -25,7 +25,7 @@ public class ClassHierarchyCreator implements ClassAnalysis<Void> {
 					String[] interfaces) {
 				ClassId classId = AsmIds.forClass(name);
 				ch.remove(classId);
-				ch.put(classId, new ClassModel2());
+				ch.put(classId, new ClassData());
 			}
 
 		}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);

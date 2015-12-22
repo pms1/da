@@ -4,12 +4,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
-public class ClassModel2 {
+public abstract class GenericData {
 	private Map<Class<?>, Object> data = new HashMap<>();
 
 	public <T> void put(Class<T> class1, T data1) {
-		data.put(class1, data1);
-
+		Object old = data.putIfAbsent(class1, data1);
+		if (old != null)
+			throw new IllegalArgumentException("Already entry for '" + class1 + "'");
 	}
 
 	public <T> T get(Class<T> class1) {
