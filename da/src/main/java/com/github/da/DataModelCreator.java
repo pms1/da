@@ -27,7 +27,7 @@ import sql.TableModel;
 import sql.types.IntType;
 import sql.types.SqlType;
 
-public class DataModelCreator implements Analyser {
+public class DataModelCreator implements Analyser<DataModelCreatorConfig> {
 	@Inject
 	ClassHierarchy ch;
 

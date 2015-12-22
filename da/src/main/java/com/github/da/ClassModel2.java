@@ -2,23 +2,9 @@ package com.github.da;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Supplier;
 
-@AnaScope
-public class AnalysisResult {
-	final String id;
-
-	AnalysisResult(String id) {
-		Objects.requireNonNull(id);
-		this.id = id;
-	}
-
-	@Override
-	public String toString() {
-		return super.toString() + "(" + id + ")";
-	}
-
+public class ClassModel2 {
 	private Map<Class<?>, Object> data = new HashMap<>();
 
 	public <T> void put(Class<T> class1, T data1) {
@@ -39,5 +25,4 @@ public class AnalysisResult {
 		assert result != null;
 		return result;
 	}
-
 }

@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface Provide {
-	Class<?>value();
+public @interface Provides {
+	Provide[]value();
 }

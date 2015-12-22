@@ -6,6 +6,6 @@ import java.nio.file.Path;
 
 import javax.inject.Provider;
 
-public interface JarProcessorInvoker {
+public interface JarProcessorRunner {
 	void run(Processors proc, Path p, Provider<InputStream> is) throws IOException;
 }

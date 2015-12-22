@@ -68,7 +68,7 @@ public class JarScanner implements RootAnalysis<JarScannerConfig> {
 
 				};
 
-				for (JarProcessorInvoker x : proc.invokers) {
+				for (JarProcessorRunner x : proc.invokers) {
 					x.run(proc, Paths.get(e.getName()), pp);
 				}
 			}

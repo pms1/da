@@ -31,7 +31,7 @@ public class ClasspathElementScanner implements RootAnalysis<ClasspathElementSca
 					}
 
 				};
-				for (JarProcessorInvoker i : proc.invokers)
+				for (JarProcessorRunner i : proc.invokers)
 					i.run(proc, file, pp);
 
 				// TODO Auto-generated method stub

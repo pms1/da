@@ -38,4 +38,9 @@ public class BeanReference<T> {
 	public static <S> BeanReference<S> forClass(Class<S> clazz2) {
 		return new BeanReference<>(clazz2);
 	}
+
+	@Override
+	public String toString() {
+		return "BeanReference(" + clazz + ")";
+	}
 }

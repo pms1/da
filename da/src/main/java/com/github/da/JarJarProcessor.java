@@ -54,8 +54,8 @@ public class JarJarProcessor implements JarContentProcessor<Void> {
 				}
 
 			};
-			System.err.println("FE " + fe);
-			for (JarProcessorInvoker x : proc.invokers) {
+
+			for (JarProcessorRunner x : proc.invokers) {
 				x.run(proc, Paths.get(e.getName()), pp);
 			}
 		}
