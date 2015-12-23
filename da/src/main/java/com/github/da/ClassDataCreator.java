@@ -34,6 +34,7 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 					String[] interfaces) {
 				if (doClass) {
 					ClassId classId = AsmIds.forClass(name);
+					// FIXME
 					ch.remove(classId);
 					ch.put(classId, classData = new ClassData());
 				}
@@ -42,25 +43,16 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 			@Override
 			public MethodVisitor visitMethod(int access, String name, String desc, String signature,
 					String[] exceptions) {
-
-				if (doMethod) {
-					MethodId methodId = AsmIds.forMethod(name, desc);
-
-					classData.remove(methodId);
-					classData.put(methodId, new MethodData());
-				}
+				if (doMethod)
+					classData.put(AsmIds.forMethod(name, desc), new MethodData());
 
 				return super.visitMethod(access, name, desc, signature, exceptions);
 			}
 
 			@Override
 			public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-				if (doField) {
-					FieldId fieldId = AsmIds.forField(name);
-
-					classData.remove(fieldId);
-					classData.put(fieldId, new FieldData());
-				}
+				if (doField)
+					classData.put(AsmIds.forField(name), new FieldData());
 
 				return super.visitField(access, name, desc, signature, value);
 			}

@@ -13,6 +13,7 @@ import org.objectweb.asm.Type;
 import com.github.da.AnalysisResult;
 import com.github.da.AsmIds;
 import com.github.da.ClassAnalysis;
+import com.github.da.ClassData;
 import com.github.da.ClassHierarchy2;
 import com.github.pms1.asm.annotation.AnnotationBuilder;
 import com.github.pms1.asm.annotation.AnnotationData;
@@ -28,14 +29,22 @@ public class AnnotationParser implements ClassAnalysis<AnnotationParserConfig> {
 
 		v.accept(new ClassVisitor(Opcodes.ASM5) {
 
-			AnnotationModel am;
+			AnnotationModel classAnotationModel;
+			private ClassData classData;
 
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName,
 					String[] interfaces) {
-				am = new AnnotationModel();
-				ch.get(AsmIds.forClass(name)).put(AnnotationModel.class, am);
-				System.err.println("CH " + name);
+				classAnotationModel = new AnnotationModel();
+				classData = ch.get(AsmIds.forClass(name));
+				classData.put(AnnotationModel.class, classAnotationModel);
+			}
+
+			boolean parse(Type t) {
+				String cls = t.getClassName();
+				String pkg = cls.substring(0, cls.lastIndexOf('.'));
+
+				return config.packages.contains(pkg);
 			}
 
 			@Override
@@ -44,17 +53,12 @@ public class AnnotationParser implements ClassAnalysis<AnnotationParserConfig> {
 					return null;
 
 				Type t = Type.getType(desc);
-				String cls = t.getClassName();
-				String pkg = cls.substring(0, cls.lastIndexOf('.'));
-
-				if (false)
-					if (!config.packages.contains(pkg))
-						return null;
+				if (!parse(t))
+					return null;
 
 				return new AnnotationBuilder() {
 					public void visitEnd(AnnotationData data) {
-						am.add(t, data);
-						System.err.println("AC " + data);
+						classAnotationModel.add(t, data);
 					};
 				};
 			}
@@ -63,17 +67,21 @@ public class AnnotationParser implements ClassAnalysis<AnnotationParserConfig> {
 			public MethodVisitor visitMethod(int access, String name, String desc, String signature,
 					String[] exceptions) {
 
+				AnnotationModel methodAnnotationModel = new AnnotationModel();
+
+				classData.get(AsmIds.forMethod(name, desc)).put(AnnotationModel.class, methodAnnotationModel);
+
 				return new MethodVisitor(Opcodes.ASM5) {
 					@Override
 					public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+						Type t = Type.getType(desc);
+						if (!parse(t))
+							return null;
+
 						return new AnnotationBuilder() {
-
-							@Override
 							public void visitEnd(AnnotationData data) {
-								System.err.println("AM " + data);
-
-							}
-
+								methodAnnotationModel.add(t, data);
+							};
 						};
 					}
 				};
@@ -81,17 +89,22 @@ public class AnnotationParser implements ClassAnalysis<AnnotationParserConfig> {
 
 			@Override
 			public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
+
+				AnnotationModel fieldAnnotationModel = new AnnotationModel();
+
+				classData.get(AsmIds.forField(name)).put(AnnotationModel.class, fieldAnnotationModel);
+
 				return new FieldVisitor(Opcodes.ASM5) {
 					@Override
 					public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
+						Type t = Type.getType(desc);
+						if (!parse(t))
+							return null;
+
 						return new AnnotationBuilder() {
-
-							@Override
 							public void visitEnd(AnnotationData data) {
-								System.err.println("AF " + data);
-
-							}
-
+								fieldAnnotationModel.add(t, data);
+							};
 						};
 					}
 				};

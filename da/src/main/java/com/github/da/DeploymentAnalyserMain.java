@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -36,7 +35,6 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
-import com.sun.glass.ui.View.Capability;
 
 public class DeploymentAnalyserMain {
 
@@ -74,40 +72,82 @@ public class DeploymentAnalyserMain {
 		}
 
 		final BeanReference<A> beanReference;
-		final C config;
+		C config;
+
+		void setConfig(Object config) {
+			this.config = (C) config;
+		}
 
 		@Override
 		public String toString() {
-			return "InternalAnalysis(" + beanReference + "," + config + ")";
+			return super.toString() + "(" + beanReference + "," + config + ")";
 		}
 	}
 
-	LinkedHashSet<InternalAnalysis> anas2 = new LinkedHashSet<>();
+	private LinkedHashSet<InternalAnalysis<?, ?>> anas2 = new LinkedHashSet<>();
 
 	@Inject
-	Resolver r;
+	private Resolver r;
 
-	Map<Capability, InternalAnalysis> provided = new HashMap<>();
-
-	void add(InternalAnalysis<?, ?> ana) {
-		Queue<InternalAnalysis<?, ?>> todo = new LinkedList<>();
+	InternalAnalysis<?, ? extends Analyser<?>> add(InternalAnalysis<?, ? extends Analyser<?>> ana) {
+		Queue<InternalAnalysis<?, ? extends Analyser<?>>> todo = new LinkedList<>();
 		todo.add(ana);
+
+		InternalAnalysis<?, ? extends Analyser<?>> result = ana;
 
 		while (!todo.isEmpty()) {
 			ana = todo.remove();
 
+			Class<? extends Analyser<?>> anaClass = r.resolveClass(ana.beanReference);
+
+			int merged = 0;
+
+			for (InternalAnalysis<?, ?> a : anas2) {
+				if (a.beanReference.equals(ana.beanReference)) {
+					AnalyserMetadata<?, ? extends Analyser<?>> metadata = analysersMetadata.getAnalyser(anaClass);
+
+					if (metadata.configurator == null) {
+						if (ana.config != null)
+							throw new Error();
+						if (a.config != null)
+							throw new Error();
+					} else {
+						Object merge = ((Configurator) metadata.configurator).merge(a.config, ana.config);
+
+						if (merge != null) {
+							a.setConfig(merge);
+							++merged;
+
+							if (result == ana)
+								result = a;
+						}
+					}
+				}
+			}
+
+			switch (merged) {
+			case 0:
+				break;
+			case 1:
+				continue;
+			default:
+				throw new Error();
+			}
+
 			if (!anas2.add(ana))
 				continue;
 
-			for (Include i : r.resolveClass(ana.beanReference).getAnnotationsByType(Include.class)) {
+			for (Include i : anaClass.getAnnotationsByType(Include.class)) {
 				todo.add(createAnalysis(i));
 			}
 
 		}
+
+		return result;
 	}
 
-	private InternalAnalysis<?, ?> createAnalysis(Include inc) {
-		return InternalAnalysis.create(BeanReference.forClass(inc.value()), null);
+	private <C, A extends Analyser<C>> InternalAnalysis<C, A> createAnalysis(Include inc) {
+		return InternalAnalysis.<C, A> create(BeanReference.forClass((Class<A>) inc.value()), null);
 	}
 
 	static class Helper {
@@ -123,7 +163,6 @@ public class DeploymentAnalyserMain {
 	Multimap<InternalAnalysis<?, ?>, Object> provides2 = HashMultimap.create();
 
 	<C, A extends Analyser<C>> void addRequirements(InternalAnalysis<C, A> ana) {
-		System.err.println("ADD-R " + ana);
 		AnalyserMetadata<C, A> md = analysersMetadata.getAnalyser(r.resolveClass(ana.beanReference));
 
 		if (md.configurator != null) {
@@ -133,49 +172,31 @@ public class DeploymentAnalyserMain {
 			reqs.forEach((r) -> requirements.put(ana, r));
 
 			for (Object r : reqs) {
+				int count = 0;
+				for (AnalyserMetadata<?, ?> a : analysersMetadata.all) {
+					AnalyserMetadata<Object, Analyser<Object>> a1 = (AnalyserMetadata<Object, Analyser<Object>>) a;
 
-				if (false && r.getClass().equals(Class.class)) {
-					AnalyserMetadata<Object, Analyser<Object>> provider = analysersMetadata.getProvider((Class<?>) r);
-					if (provider == null)
-						throw new Error("no provider for " + r);
-					if (provider.configurator == null) {
+					if (a.configurator == null)
+						continue;
 
-						System.err.println("ADD-R " + ana + " " + r + " (config null)");
-						InternalAnalysis<?, ?> internalAnalysis = InternalAnalysis
-								.create(BeanReference.forClass(provider.analyser), null);
-						add(internalAnalysis);
+					Object config = a.configurator.createConfiguration(r);
+					if (config == null)
+						continue;
 
-						provides2.put(internalAnalysis, r);
-					} else {
-						throw new Error();
-					}
-				} else {
-					int count = 0;
-					for (AnalyserMetadata<?, ?> a : analysersMetadata.all) {
-						AnalyserMetadata<Object, Analyser<Object>> a1 = (AnalyserMetadata<Object, Analyser<Object>>) a;
+					InternalAnalysis<?, ? extends Analyser<?>> internalAnalysis = InternalAnalysis
+							.create(BeanReference.forClass(a1.analyser), config);
 
-						if (a.configurator == null)
-							continue;
+					internalAnalysis = add(internalAnalysis);
 
-						Object config = a.configurator.createConfiguration(r);
-						if (config == null)
-							continue;
+					provides2.put(internalAnalysis, r);
 
-						System.err.println("ADD-R " + ana + " " + r + " (config " + config + ")");
-						InternalAnalysis<?, ?> internalAnalysis = InternalAnalysis
-								.create(BeanReference.forClass(a1.analyser), config);
-						add(internalAnalysis);
-
-						provides2.put(internalAnalysis, r);
-
-						++count;
-					}
-
-					if (count == 0)
-						throw new Error("No provider for requirement: " + r);
-					else if (count != 1)
-						throw new Error("Multiple providers for requirement: " + r);
+					++count;
 				}
+
+				if (count == 0)
+					throw new Error("No provider for requirement: " + r);
+				else if (count != 1)
+					throw new Error("Multiple providers for requirement: " + r);
 			}
 		}
 	}
@@ -196,7 +217,6 @@ public class DeploymentAnalyserMain {
 					boolean all = true;
 					for (Object r : requirements.get(ana)) {
 						if (!provided.contains(r)) {
-							System.err.println("OUT " + ana + " " + r + " " + provided);
 							all = false;
 							break;
 						}
@@ -206,7 +226,6 @@ public class DeploymentAnalyserMain {
 						result.add(ana);
 
 						provided.addAll(provides2.get(ana));
-						System.err.println("P " + ana + " " + provides2.get(ana));
 
 						any = true;
 						done.add(ana);
@@ -216,9 +235,11 @@ public class DeploymentAnalyserMain {
 				if (!any) {
 					if (result.size() == anas.size())
 						break;
-					else
-						throw new Error(result.size() + " " + anas.size() + " unresolved: "
-								+ new HashSet<>(anas).removeAll(done));
+					else {
+						Set<Object> unresolved = new HashSet<>(anas);
+						unresolved.removeAll(done);
+						throw new Error(result.size() + " " + anas.size() + " unresolved: " + unresolved);
+					}
 				}
 			}
 
@@ -230,9 +251,9 @@ public class DeploymentAnalyserMain {
 		for (Analysis<? extends Analyser<?>> ana : config.analyses)
 			add(InternalAnalysis.create(ana));
 
-		Set<InternalAnalysis> done = new HashSet<>();
+		Set<InternalAnalysis<?, ?>> done = new HashSet<>();
 		for (;;) {
-			LinkedHashSet<InternalAnalysis> old = new LinkedHashSet<>(anas2);
+			LinkedHashSet<InternalAnalysis<?, ?>> old = new LinkedHashSet<>(anas2);
 			for (InternalAnalysis<?, ?> ana : old) {
 				if (!done.add(ana))
 					continue;

@@ -9,7 +9,11 @@ public interface Configurator<C, A extends Analyser<C>> {
 		return Collections.emptyList();
 	}
 
-	default C createConfiguration(Object r) {
+	default C createConfiguration(Object requirement) {
+		return null;
+	}
+
+	default C merge(C config1, C config2) {
 		return null;
 	}
 

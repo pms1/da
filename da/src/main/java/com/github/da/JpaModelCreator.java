@@ -1,15 +1,11 @@
 package com.github.da;
 
-import java.util.Map.Entry;
-
 import javax.inject.Inject;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
-import com.github.pms1.asm.annotation.AnnotationData;
 import com.github.pms1.c4.classes.annotations.AnnotationModel;
 
 public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
@@ -27,10 +23,6 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 			public void visit(int version, int access, String name, String signature, String superName,
 					String[] interfaces) {
 				AnnotationModel am = ch.get(AsmIds.forClass(name)).get(AnnotationModel.class);
-
-				for (Entry<Type, AnnotationData> e : am) {
-					System.err.println("E=" + e);
-				}
 
 			}
 		}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);

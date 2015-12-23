@@ -1,6 +1,7 @@
 package com.github.da;
 
 import com.github.da.ClassDataCreatorConfig.Data;
+import com.google.common.collect.Sets;
 
 public class ClassDataCreatorConfigurator implements Configurator<ClassDataCreatorConfig, ClassDataCreator> {
 
@@ -15,5 +16,10 @@ public class ClassDataCreatorConfigurator implements Configurator<ClassDataCreat
 		} else {
 			return null;
 		}
+	}
+
+	@Override
+	public ClassDataCreatorConfig merge(ClassDataCreatorConfig config1, ClassDataCreatorConfig config2) {
+		return new ClassDataCreatorConfig(Sets.union(config1.datas, config2.datas));
 	}
 }

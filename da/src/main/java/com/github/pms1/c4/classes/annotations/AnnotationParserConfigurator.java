@@ -2,12 +2,14 @@ package com.github.pms1.c4.classes.annotations;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import com.github.da.ClassData;
 import com.github.da.ClassHierarchy2;
 import com.github.da.Configurator;
 import com.github.da.FieldData;
 import com.github.da.MethodData;
+import com.google.common.collect.Sets;
 
 public class AnnotationParserConfigurator implements Configurator<AnnotationParserConfig, AnnotationParser> {
 
@@ -17,7 +19,7 @@ public class AnnotationParserConfigurator implements Configurator<AnnotationPars
 			return null;
 		AnnotationScannerRequirement r = (AnnotationScannerRequirement) requirement;
 
-		return new AnnotationParserConfig(Arrays.asList(r.pkg));
+		return new AnnotationParserConfig(Collections.singleton(r.pkg));
 	}
 
 	@Override
@@ -25,4 +27,8 @@ public class AnnotationParserConfigurator implements Configurator<AnnotationPars
 		return Arrays.asList(ClassHierarchy2.class, MethodData.class, ClassData.class, FieldData.class);
 	}
 
+	@Override
+	public AnnotationParserConfig merge(AnnotationParserConfig config1, AnnotationParserConfig config2) {
+		return new AnnotationParserConfig(Sets.union(config1.packages, config2.packages));
+	}
 }
