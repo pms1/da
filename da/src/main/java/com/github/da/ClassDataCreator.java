@@ -18,8 +18,6 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 
 	@Override
 	public void run(ClassDataCreatorConfig config, ClassReader v) {
-		assert config == null;
-
 		ClassHierarchy2 ch = ar.getOrCreate(ClassHierarchy2.class, ClassHierarchy2::new);
 
 		boolean doClass = config.datas.contains(Data.CLASS);
