@@ -1,11 +1,11 @@
-package com.github.da;
+package com.github.pms1.c4.classes.annotations;
 
 import java.util.Objects;
 
 public class AnnotationScannerRequirement {
 	final String pkg;
 
-	AnnotationScannerRequirement(String pkg) {
+	public AnnotationScannerRequirement(String pkg) {
 		Objects.requireNonNull(pkg);
 		if (pkg.isEmpty())
 			throw new IllegalArgumentException();
