@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.github.da.AnaScope;
+
+@AnaScope
 public class AnnotationParserConfig {
 	AnnotationParserConfig(Set<String> packages) {
 		Objects.requireNonNull(packages);

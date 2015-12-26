@@ -4,6 +4,6 @@ import java.io.IOException;
 
 public interface RootAnalysis<T> extends Analyser<T> {
 
-	void run(T t, Processors p) throws IOException;
+	void run(Processors p) throws IOException;
 
 }

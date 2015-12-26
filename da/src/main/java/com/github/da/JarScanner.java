@@ -19,10 +19,13 @@ public class JarScanner implements RootAnalysis<JarScannerConfig> {
 	@Inject
 	JarJarProcessor jpp;
 
-	@Override
-	public void run(JarScannerConfig config, Processors proc) throws IOException {
+	@Inject
+	JarScannerConfig config;
 
-		jpp.run(null, proc, config.getPath(), new Provider<InputStream>() {
+	@Override
+	public void run(Processors proc) throws IOException {
+
+		jpp.run(proc, config.getPath(), new Provider<InputStream>() {
 
 			@Override
 			public InputStream get() {
@@ -68,7 +71,7 @@ public class JarScanner implements RootAnalysis<JarScannerConfig> {
 
 				};
 
-				for (JarProcessorRunner x : proc.invokers) {
+				for (JarContentProcessor<?> x : proc.invokers) {
 					x.run(proc, Paths.get(e.getName()), pp);
 				}
 			}

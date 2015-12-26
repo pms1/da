@@ -12,9 +12,12 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 
 	@Inject
 	AnalysisResult ar;
+	
+	@Inject
+	JpaModelCreatorConfig config;
 
 	@Override
-	public void run(JpaModelCreatorConfig config, ClassReader v) {
+	public void run(ClassReader v) {
 		ClassHierarchy2 ch = ar.get(ClassHierarchy2.class);
 
 		v.accept(new ClassVisitor(Opcodes.ASM5) {

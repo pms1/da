@@ -72,13 +72,13 @@ public class ClassProcessor2 implements JarContentProcessor<Void> {
 	}
 
 	@Override
-	public void run(Void config, Processors proc, Path p, Provider<InputStream> is) throws IOException {
+	public void run(Processors proc, Path p, Provider<InputStream> is) throws IOException {
 		if (!p.getFileName().toString().endsWith(".class"))
 			return;
 
 		ClassReader reader = new ClassReader(is.get());
 
-		for (ClassAnalysisRunner p1 : proc.classAnalyes)
+		for (ClassAnalysis<?>p1 : proc.classAnalyes)
 			p1.run(reader);
 	}
 

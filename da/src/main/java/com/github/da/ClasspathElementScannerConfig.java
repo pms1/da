@@ -3,7 +3,7 @@ package com.github.da;
 import java.nio.file.Path;
 
 @AnaScope
-public class ClasspathElementScannerConfig extends Analysis<ClasspathElementScanner> {
+public class ClasspathElementScannerConfig extends Analysis<ClasspathElementScannerConfig,ClasspathElementScanner> {
 	private final Path path;
 
 	public interface Builder {

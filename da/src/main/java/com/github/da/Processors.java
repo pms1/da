@@ -3,6 +3,6 @@ package com.github.da;
 import java.util.List;
 
 public class Processors {
-	List<JarProcessorRunner> invokers;
-	List<ClassAnalysisRunner> classAnalyes;
+	List<JarContentProcessor<?>> invokers;
+	List<ClassAnalysis<?>> classAnalyes;
 }

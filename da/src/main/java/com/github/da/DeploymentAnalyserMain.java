@@ -58,19 +58,13 @@ public class DeploymentAnalyserMain {
 	}
 
 	static class InternalAnalysis<C, A extends Analyser<C>> {
-		private InternalAnalysis(BeanReference<A> beanReference, C config) {
+		private InternalAnalysis(AnalyserMetadata<C, A> metadata, BeanReference<A> beanReference, C config) {
+			this.metadata = metadata;
 			this.beanReference = beanReference;
 			this.config = config;
 		}
 
-		static <C, A extends Analyser<C>> InternalAnalysis<C, A> create(BeanReference<A> beanReference, C config) {
-			return new InternalAnalysis<C, A>(beanReference, config);
-		}
-
-		static <C, A extends Analyser<C>> InternalAnalysis<C, A> create(Analysis<A> analysis) {
-			return new InternalAnalysis<C, A>(analysis.beanReference, (C) analysis);
-		}
-
+		final AnalyserMetadata<C,A> metadata;
 		final BeanReference<A> beanReference;
 		C config;
 
@@ -147,7 +141,7 @@ public class DeploymentAnalyserMain {
 	}
 
 	private <C, A extends Analyser<C>> InternalAnalysis<C, A> createAnalysis(Include inc) {
-		return InternalAnalysis.<C, A> create(BeanReference.forClass((Class<A>) inc.value()), null);
+		return create(BeanReference.forClass((Class<A>) inc.value()), null);
 	}
 
 	static class Helper {
@@ -183,8 +177,8 @@ public class DeploymentAnalyserMain {
 					if (config == null)
 						continue;
 
-					InternalAnalysis<?, ? extends Analyser<?>> internalAnalysis = InternalAnalysis
-							.create(BeanReference.forClass(a1.analyser), config);
+					InternalAnalysis<?, ? extends Analyser<?>> internalAnalysis = create(
+							BeanReference.forClass(a1.analyser), config);
 
 					internalAnalysis = add(internalAnalysis);
 
@@ -204,13 +198,13 @@ public class DeploymentAnalyserMain {
 	class AnalysisSorter {
 		Set<Object> provided = new HashSet<>();
 
-		List<InternalAnalysis<?, ?>> resolve(List<InternalAnalysis<?, ?>> anas) {
-			List<InternalAnalysis<?, ?>> result = new LinkedList<>();
+		<T> List<InternalAnalysis<?, ? extends T>> resolve(List<InternalAnalysis<?, ? extends T>> anas) {
+			List<InternalAnalysis<?, ? extends T>> result = new LinkedList<>();
 
 			Set<InternalAnalysis<?, ?>> done = new HashSet<>();
 			for (;;) {
 				boolean any = false;
-				for (InternalAnalysis<?, ?> ana : anas) {
+				for (InternalAnalysis<?, ? extends T> ana : anas) {
 					if (done.contains(ana))
 						continue;
 
@@ -248,8 +242,8 @@ public class DeploymentAnalyserMain {
 	}
 
 	AnalysisResult doit2(AnalysisConfiguration config) throws IOException {
-		for (Analysis<? extends Analyser<?>> ana : config.analyses)
-			add(InternalAnalysis.create(ana));
+		for (Analysis<?, ? extends Analyser<?>> ana : config.analyses)
+			add(create((Analysis) ana));
 
 		Set<InternalAnalysis<?, ?>> done = new HashSet<>();
 		for (;;) {
@@ -264,10 +258,10 @@ public class DeploymentAnalyserMain {
 				break;
 		}
 
-		List<InternalAnalysis<?, ?>> jarContent = new LinkedList<>();
-		List<InternalAnalysis<?, ?>> post = new LinkedList<>();
-		List<InternalAnalysis<?, ?>> root = new LinkedList<>();
-		List<InternalAnalysis<?, ?>> classAna = new LinkedList<>();
+		List<InternalAnalysis<?, ? extends JarContentProcessor<?>>> jarContent = new LinkedList<>();
+		List<InternalAnalysis<?, ? extends PostAnalyser<?>>> post = new LinkedList<>();
+		List<InternalAnalysis<?, ? extends RootAnalysis<?>>> root = new LinkedList<>();
+		List<InternalAnalysis<?, ? extends ClassAnalysis<?>>> classAna = new LinkedList<>();
 
 		for (InternalAnalysis ana : anas2) {
 			Class<? extends Analyser<?>> clazz = r.resolveClass(ana.beanReference);
@@ -293,20 +287,17 @@ public class DeploymentAnalyserMain {
 
 		Processors proc = new Processors();
 		proc.invokers = new LinkedList<>();
-		for (InternalAnalysis<?, ?> ana : jarContent) {
-			JarContentProcessor x = (JarContentProcessor) r.resolve(ana.beanReference);
-			proc.invokers.add((proc1, path, is) -> x.run(ana.config, proc1, path, is));
-		}
+		for (InternalAnalysis<?, ? extends JarContentProcessor<?>> ana : jarContent) {
+			proc.invokers.add(instantiate(ana));
+			}
 
 		proc.classAnalyes = new LinkedList<>();
-		for (InternalAnalysis<?, ?> ana : r1.resolve(classAna)) {
-			ClassAnalysis x = (ClassAnalysis) r.resolve(ana.beanReference);
-			proc.classAnalyes.add((v) -> x.run(ana.config, v));
+		for (InternalAnalysis<?, ? extends ClassAnalysis<?>> ana : r1.resolve(classAna)) {
+			proc.classAnalyes.add(instantiate(ana));
 		}
 
-		for (InternalAnalysis<?, ?> ana : new AnalysisSorter().resolve(root)) {
-			RootAnalysis aa = (RootAnalysis) r.resolve(ana.beanReference);
-			((RootAnalysis) aa).run(ana.config, proc);
+		for (InternalAnalysis<?, ? extends RootAnalysis<?>> ana : new AnalysisSorter().resolve(root)) {
+			instantiate(ana).run(proc);
 		}
 
 		for (InternalAnalysis<?, ?> ana : r1.resolve(post)) {
@@ -323,6 +314,19 @@ public class DeploymentAnalyserMain {
 		cc.deactivate();
 
 		return ar;
+	}
+
+	private <C, A extends Analyser<C>> A instantiate(InternalAnalysis<C, A> ana) {
+		if(ana.metadata.config!=null) 
+			cc.bind(ana.metadata.config, ana.config);
+		
+		try {
+		A a = r.resolve(ana.beanReference);
+		return a;
+		} finally {
+			if(ana.metadata.config!=null) 
+						cc.unbind(ana.metadata.config);
+		}
 	}
 
 	@Inject
@@ -464,6 +468,24 @@ public class DeploymentAnalyserMain {
 			metadata.add(createAnalyserMetadata((Class) b.getBeanClass()));
 		}
 		analysersMetadata = new AnalysersMetadata(metadata);
+	}
+
+	<C, A extends Analyser<C>> InternalAnalysis<C, A> create(BeanReference<A> beanReference, C config) {
+		Class<A> resolveClass = r.resolveClass(beanReference);
+		return new InternalAnalysis<C, A>(analysersMetadata.getAnalyser(resolveClass), beanReference, config);
+	}
+
+	<C extends Analysis<C, A>, A extends Analyser<C>> InternalAnalysis<C, A> create2(C analysis) {
+		Class<A> resolveClass = r.resolveClass(analysis.beanReference);
+		return new InternalAnalysis<C, A>(analysersMetadata.getAnalyser(resolveClass), analysis.beanReference,
+				analysis);
+	}
+
+	<C extends Analysis<C, A>, A extends Analyser<C>> InternalAnalysis<C, A> create(C analysis) {
+		Class<A> resolveClass = r.resolveClass(analysis.beanReference);
+		return new InternalAnalysis<C, A>(analysersMetadata.getAnalyser(resolveClass), analysis.beanReference,
+				analysis);
+
 	}
 
 	// private Class<Analysis<? extends Analyser<?>>> getProvider(Class<?>

@@ -16,8 +16,11 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 	@Inject
 	AnalysisResult ar;
 
+	@Inject
+	ClassDataCreatorConfig config;
+	
 	@Override
-	public void run(ClassDataCreatorConfig config, ClassReader v) {
+	public void run( ClassReader v) {
 		ClassHierarchy2 ch = ar.getOrCreate(ClassHierarchy2.class, ClassHierarchy2::new);
 
 		boolean doClass = config.datas.contains(Data.CLASS);

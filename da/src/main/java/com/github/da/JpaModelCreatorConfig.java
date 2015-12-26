@@ -3,7 +3,7 @@ package com.github.da;
 import java.nio.file.Path;
 
 @AnaScope
-public class JpaModelCreatorConfig extends Analysis<JpaModelCreator> {
+public class JpaModelCreatorConfig extends Analysis<JpaModelCreatorConfig,JpaModelCreator> {
 
 	public interface Builder {
 

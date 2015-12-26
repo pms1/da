@@ -15,7 +15,7 @@ import com.google.common.io.ByteStreams;
 public class JarJarProcessor implements JarContentProcessor<Void> {
 
 	@Override
-	public void run(Void config, Processors proc, Path p, Provider<InputStream> is) throws IOException {
+	public void run(Processors proc, Path p, Provider<InputStream> is) throws IOException {
 		if (!p.getFileName().toString().endsWith(".jar") //
 				&& !p.getFileName().toString().endsWith(".war") //
 				&& !p.getFileName().toString().endsWith(".ear") //
@@ -55,7 +55,7 @@ public class JarJarProcessor implements JarContentProcessor<Void> {
 
 			};
 
-			for (JarProcessorRunner x : proc.invokers) {
+			for (JarContentProcessor<?> x : proc.invokers) {
 				x.run(proc, Paths.get(e.getName()), pp);
 			}
 		}

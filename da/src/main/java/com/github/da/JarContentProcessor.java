@@ -8,5 +8,5 @@ import javax.inject.Provider;
 
 public interface JarContentProcessor<T> extends Analyser<T> {
 
-	void run(T config, Processors proc, Path p, Provider<InputStream> is) throws IOException;
+	void run(Processors proc, Path p, Provider<InputStream> is) throws IOException;
 }

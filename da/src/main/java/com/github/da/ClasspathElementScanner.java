@@ -8,12 +8,16 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class ClasspathElementScanner implements RootAnalysis<ClasspathElementScannerConfig> {
 
+	@Inject
+	ClasspathElementScannerConfig config;
+	
 	@Override
-	public void run(ClasspathElementScannerConfig config, Processors proc) throws IOException {
+	public void run(Processors proc) throws IOException {
 
 		Files.walkFileTree(config.getPath(), new SimpleFileVisitor<Path>() {
 			@Override
@@ -31,7 +35,7 @@ public class ClasspathElementScanner implements RootAnalysis<ClasspathElementSca
 					}
 
 				};
-				for (JarProcessorRunner i : proc.invokers)
+				for (JarContentProcessor<?> i : proc.invokers)
 					i.run(proc, file, pp);
 
 				// TODO Auto-generated method stub

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
+@AnaScope
 public class ClassDataCreatorConfig {
 	static enum Data {
 		CLASS, METHOD, FIELD
