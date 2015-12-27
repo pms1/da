@@ -5,11 +5,13 @@ import java.util.Collection;
 
 import com.github.da.JpaClassAnalyser.TResult;
 
+import asm.ClassSignature;
+
 public class JpaModelCreatorPhase2Configurator implements Configurator<NoConfiguration, JpaModelCreatorPhase2> {
 
 	@Override
 	public Collection<Object> getRequirements(NoConfiguration config) {
-		return Arrays.asList(TResult.class);
+		return Arrays.asList(TResult.class, ClassSignature.class);
 	}
 
 	@Override

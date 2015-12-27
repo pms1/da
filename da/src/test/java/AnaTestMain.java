@@ -7,10 +7,12 @@ import com.github.da.AnalysisResult;
 import com.github.da.DataModelCreatorConfig;
 import com.github.da.DeploymentAnalyserMain;
 import com.github.da.HibernateDB2TypeMapper;
-import com.github.da.HibernateTypeMapper;
+import com.github.da.HibernateTypeMapper2;
 import com.github.da.JarScannerConfig;
 import com.github.da.JpaModelCreatorConfig;
 import com.google.common.base.Stopwatch;
+
+import sql.DatabaseModel;
 
 public class AnaTestMain {
 	public static void main(String[] args) throws IOException {
@@ -60,10 +62,12 @@ public class AnaTestMain {
 			config.what = new String[] { zip.toString() };
 			DataModelCreatorConfig dbmodelGen = DataModelCreatorConfig.newBuilder()
 					.withTypeMapper(HibernateDB2TypeMapper.class)//
-					.withTypeMapper(HibernateTypeMapper.class)//
+					.withTypeMapper(HibernateTypeMapper2.class)//
 					.build();
 			config.withAnalysis(dbmodelGen);
 			AnalysisResult ar = DeploymentAnalyserMain.doit(config);
+			DatabaseModel databaseModel = ar.get(DatabaseModel.class);
+			System.err.println("databaseModel=" + databaseModel);
 			o.stop();
 
 			System.err.println("I " + (i + 1));

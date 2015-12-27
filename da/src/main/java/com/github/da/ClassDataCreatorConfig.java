@@ -26,4 +26,9 @@ public class ClassDataCreatorConfig {
 		Preconditions.checkArgument(!datas.isEmpty());
 		this.datas = Collections.unmodifiableSet(new HashSet<>(datas));
 	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "(" + datas + ")";
+	}
 }

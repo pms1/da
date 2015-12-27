@@ -23,4 +23,9 @@ public class JpaModelCreatorConfigurator implements Configurator<JpaModelCreator
 
 		return null;
 	}
+
+	@Override
+	public JpaModelCreatorConfig merge(JpaModelCreatorConfig config1, JpaModelCreatorConfig config2) {
+		return config1;
+	}
 }

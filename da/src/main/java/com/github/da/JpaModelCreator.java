@@ -60,7 +60,6 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 
 				for (Map.Entry<Type, AnnotationData> e : am) {
 					Type t = e.getKey();
-					System.err.println("M " + e);
 
 					if (t.equals(JpaTypes.embeddable)) {
 						result.setEmbeddable();
@@ -115,9 +114,6 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 					property.setJoinColumns(Collections
 							.singletonList(AnnotationConverter.convertAnnotation(JoinColumnAnnotation.class, fin)));
 				} else if (t.equals(JpaTypes.javaxPersistenceJoinColumns)) {
-
-					System.err.println("FIN " + fin);
-
 					property.setJoinColumns(
 							AnnotationConverter.convertAnnotation(JoinColumnsAnnotation.class, fin).value);
 				} else if (t.equals(JpaTypes.javaxPersistenceOneToOne)) {
@@ -210,8 +206,6 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 					return null;
 				}
 
-				System.err.println("START METHOD " + name + " " + desc + " " + signature);
-
 				MethodSignature methodSignature = AsmTypeParser.parseMethodSignature(desc, signature, exceptions);
 
 				Type methodType = Type.getMethodType(desc);
@@ -255,8 +249,6 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 
 				AnnotationModel am = cd.get(AsmIds.forField(name)).get(AnnotationModel.class);
 
-				System.err.println("START FIELD " + name + " " + desc + " " + signature + " " + value);
-
 				JavaType type2 = AsmTypeParser.parseFieldSignature(desc, signature);
 
 				Type tt = Type.getType(desc);
@@ -280,8 +272,6 @@ public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
 
 			@Override
 			public void visitEnd() {
-				System.err.println("END " + result);
-
 				TResult r = new TResult();
 				assert fieldProperties != null;
 				r.fieldProperties = fieldProperties;

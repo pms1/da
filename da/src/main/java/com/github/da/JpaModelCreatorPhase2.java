@@ -70,7 +70,6 @@ public class JpaModelCreatorPhase2 implements PostAnalyser<NoConfiguration> {
 		if (result == null)
 			return;
 
-		System.err.println("X " + bean);
 		if (result.isEntity()) {
 			JpaAccess defaultAccess;
 

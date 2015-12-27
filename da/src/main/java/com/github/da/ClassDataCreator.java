@@ -26,7 +26,6 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 	@Override
 	public void run(ClassReader v) {
 		ClassHierarchy2 ch = ar.getOrCreate(ClassHierarchy2.class, ClassHierarchy2::new);
-		System.out.println("CDC " + ar + " " + config);
 
 		boolean doClassType = config.datas.contains(Data.CLASS_TYPE);
 		boolean doClassSignature = config.datas.contains(Data.CLASS_SIGNATURE);
@@ -40,10 +39,8 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName,
 					String[] interfaces) {
-				System.out.println("CDC2 " + name);
 				if (doClass) {
 					ClassId classId = AsmIds.forClass(name);
-					System.out.println("CDC2a " + name + " " + classId);
 					// FIXME
 					ch.remove(classId);
 					ch.put(classId, classData = new ClassData(classId));
@@ -79,4 +76,8 @@ public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
 		}, ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES);
 	}
 
+	@Override
+	public String toString() {
+		return super.toString() + "(" + config + ")";
+	}
 }

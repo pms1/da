@@ -78,14 +78,17 @@ public class Ext implements Extension {
 			current = null;
 		}
 
-		Map<Class<?>, Object> bindings = new HashMap<>();
+		private final Map<Class<?>, Object> bindings = new HashMap<>();
 
 		public void bind(Class<? extends Object> key, Object value) {
+			Objects.requireNonNull(key);
+			Objects.requireNonNull(value);
 			if (bindings.putIfAbsent(key, value) != null)
 				throw new IllegalArgumentException();
 		}
 
 		public void unbind(Class<?> key) {
+			Objects.requireNonNull(key);
 			if (bindings.remove(key) == null)
 				throw new IllegalArgumentException();
 		}

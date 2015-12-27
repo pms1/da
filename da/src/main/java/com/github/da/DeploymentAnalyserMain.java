@@ -155,6 +155,7 @@ public class DeploymentAnalyserMain {
 
 	Multimap<InternalAnalysis<?, ?>, Object> requirements = HashMultimap.create();
 	Multimap<InternalAnalysis<?, ?>, Object> provides2 = HashMultimap.create();
+	Set<Object> allRequirements = new HashSet<>();
 
 	<C, A extends Analyser<C>> void addRequirements(InternalAnalysis<C, A> ana) {
 		AnalyserMetadata<C, A> md = analysersMetadata.getAnalyser(r.resolveClass(ana.beanReference));
@@ -166,6 +167,9 @@ public class DeploymentAnalyserMain {
 			reqs.forEach(r -> requirements.put(ana, r));
 
 			for (Object r : reqs) {
+				if (!allRequirements.add(r))
+					continue;
+
 				int count = 0;
 				for (AnalyserMetadata<?, ?> a : analysersMetadata.all) {
 					AnalyserMetadata<Object, Analyser<Object>> a1 = (AnalyserMetadata<Object, Analyser<Object>>) a;
@@ -181,8 +185,6 @@ public class DeploymentAnalyserMain {
 							BeanReference.forClass(a1.analyser), config);
 
 					internalAnalysis = add(internalAnalysis);
-
-					System.err.println("ADD2 " + r + " " + internalAnalysis);
 
 					provides2.put(internalAnalysis, r);
 
@@ -254,7 +256,6 @@ public class DeploymentAnalyserMain {
 				if (!done.add(ana))
 					continue;
 
-				System.err.println("ADD " + ana);
 				addRequirements(ana);
 			}
 			if (old.size() == anas2.size())
@@ -382,19 +383,8 @@ public class DeploymentAnalyserMain {
 			this.analyser = analyser;
 			Objects.requireNonNull(provides);
 			this.provides = provides;
-			Objects.requireNonNull(config);
 			this.config = config;
-			Objects.requireNonNull(configurator);
 			this.configurator = configurator;
-		}
-
-		AnalyserMetadata(Class<A> analyser, Collection<Provide> provides) {
-			Objects.requireNonNull(analyser);
-			this.analyser = analyser;
-			Objects.requireNonNull(provides);
-			this.provides = provides;
-			this.config = null;
-			this.configurator = null;
 		}
 
 		@Override
@@ -412,29 +402,33 @@ public class DeploymentAnalyserMain {
 
 		List<Provide> provides = Arrays.asList(beanClass.getAnnotationsByType(Provide.class));
 
-		if (!configClass.equals(Void.class)) {
-			Type configuratorType = configuratorType(configClass, beanClass);
+		boolean noConfig = configClass.equals(Void.class) || configClass.equals(NoConfiguration.class);
 
-			Set<Bean<?>> beans = bm.getBeans(configuratorType);
-			switch (beans.size()) {
-			case 1:
-				@SuppressWarnings("unchecked")
-				Class<D> configuratorClass = (Class<D>) Iterables.getOnlyElement(beans).getBeanClass();
-				Instance<D> select = configurators.select(configuratorClass);
-				if (select.isAmbiguous())
-					throw new Error();
-				else if (select.isUnsatisfied())
-					throw new Error();
+		Type configuratorType = configuratorType(configClass, beanClass);
 
-				return new AnalyserMetadata<C, A>(beanClass, provides, configClass, select.get());
-			case 0:
+		Set<Bean<?>> beans = bm.getBeans(configuratorType);
+		switch (beans.size()) {
+		case 1:
+			@SuppressWarnings("unchecked")
+			Class<D> configuratorClass = (Class<D>) Iterables.getOnlyElement(beans).getBeanClass();
+			Instance<D> select = configurators.select(configuratorClass);
+			if (select.isAmbiguous())
+				throw new Error();
+			else if (select.isUnsatisfied())
+				throw new Error();
+
+			return new AnalyserMetadata<C, A>(beanClass, provides, noConfig ? null : configClass, select.get());
+		case 0:
+			if (noConfig) {
+				return new AnalyserMetadata<C, A>(beanClass, provides, null, null);
+			} else
 				throw new Error("No configurators found for " + configuratorType);
-			default:
-				throw new Error("Multiple configurators found for " + configuratorType + ": " + beans);
-			}
-		} else {
-			return new AnalyserMetadata<C, A>(beanClass, provides);
+		default:
+			throw new Error("Multiple configurators found for " + configuratorType + ": " + beans);
 		}
+		// } else {
+		// return new AnalyserMetadata<C, A>(beanClass, provides);
+		// }
 	}
 
 	static class AnalysersMetadata {
