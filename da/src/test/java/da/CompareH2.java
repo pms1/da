@@ -28,10 +28,11 @@ import javax.persistence.Table;
 
 import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
+import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
 import com.github.da.DeploymentAnalyserMain;
 import com.github.da.HibernateH2TypeMapper;
-import com.github.da.HibernateTypeMapper;
+import com.github.da.HibernateTypeMapper2;
 
 import sql.ColumnId;
 import sql.ColumnModel;
@@ -49,11 +50,14 @@ public class CompareH2 {
 			Path p = findDir(c);
 			AnalysisConfiguration config = new AnalysisConfiguration();
 			config.what = new String[] { p.toString() };
+			config = config.withAnalysis(ClasspathElementScannerConfig.newBuilder() //
+					.withPath(p) //
+					.build());
 			DataModelCreatorConfig dbmodelGen = DataModelCreatorConfig.newBuilder()
 					.withTypeMapper(HibernateH2TypeMapper.class)//
-					.withTypeMapper(HibernateTypeMapper.class)//
+					.withTypeMapper(HibernateTypeMapper2.class)//
 					.build();
-			config.withAnalysis(dbmodelGen);
+			config = config.withAnalysis(dbmodelGen);
 			AnalysisResult ar = DeploymentAnalyserMain.doit(config);
 			DatabaseModel dm = ar.get(DatabaseModel.class);
 

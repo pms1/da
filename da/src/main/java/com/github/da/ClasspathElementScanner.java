@@ -15,7 +15,7 @@ public class ClasspathElementScanner implements RootAnalysis<ClasspathElementSca
 
 	@Inject
 	ClasspathElementScannerConfig config;
-	
+
 	@Override
 	public void run(Processors proc) throws IOException {
 
@@ -35,6 +35,8 @@ public class ClasspathElementScanner implements RootAnalysis<ClasspathElementSca
 					}
 
 				};
+
+				System.err.println("XXXX " + file);
 				for (JarContentProcessor<?> i : proc.invokers)
 					i.run(proc, file, pp);
 

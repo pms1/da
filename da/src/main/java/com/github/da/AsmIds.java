@@ -1,5 +1,7 @@
 package com.github.da;
 
+import java.util.Objects;
+
 import org.objectweb.asm.Type;
 
 import com.google.common.base.Preconditions;
@@ -28,5 +30,11 @@ public final class AsmIds {
 
 	public static FieldId forField(String name) {
 		return new FieldId(name);
+	}
+
+	public static ClassId forClass(Type t) {
+		Objects.requireNonNull(t);
+		Preconditions.checkArgument(t.getSort() == Type.OBJECT);
+		return new ClassId(t.getInternalName());
 	}
 }

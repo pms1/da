@@ -44,7 +44,6 @@ public class MyPUH2 {
 				System.err.println("---\n" + writer + "---\n");
 				for (String s : writer.toString().split("\r?\n")) {
 					connection.createStatement().execute(s);
-					System.err.println();
 				}
 
 				DatabaseModel m = new H2ModelReader().read(connection);

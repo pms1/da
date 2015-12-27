@@ -1,7 +1,11 @@
 package com.github.da;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
+import org.objectweb.asm.Type;
 
 @AnaScope
 public class ClassHierarchy2 {
@@ -14,6 +18,10 @@ public class ClassHierarchy2 {
 		return result;
 	}
 
+	public ClassData find(ClassId classId) {
+		return data.get(classId);
+	}
+
 	public void put(ClassId classId, ClassData classModel) {
 		ClassData old = data.putIfAbsent(classId, classModel);
 		if (old != null)
@@ -22,5 +30,19 @@ public class ClassHierarchy2 {
 
 	public void remove(ClassId classId) {
 		data.remove(classId);
+	}
+
+	public Collection<ClassData> getClasses() {
+		return data.values();
+	}
+
+	public ClassData get(Type t) {
+		Objects.requireNonNull(t);
+		return get(AsmIds.forClass(t));
+	}
+
+	public ClassData find(Type t) {
+		Objects.requireNonNull(t);
+		return find(AsmIds.forClass(t));
 	}
 }

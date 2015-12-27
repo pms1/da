@@ -30,9 +30,9 @@ public class HibernateDB2TypeMapper implements TypeMapper {
 
 			@Override
 			public SqlType visit(RawType rawType) {
-				if (rawType.getRawType().equals(JpaClassAnalyser.javaLangBoolean)) {
+				if (rawType.getRawType().equals(JreTypes.javaLangBoolean)) {
 					return SmallIntType.create();
-				} else if (rawType.getRawType().equals(JpaClassAnalyser.javaLangByte)) {
+				} else if (rawType.getRawType().equals(JreTypes.javaLangByte)) {
 					return SmallIntType.create();
 				} else {
 					return null;

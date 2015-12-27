@@ -27,7 +27,7 @@ public class JpaModelBuilder {
 		Objects.requireNonNull(c);
 
 		if (false)
-			if (!c.clazz.getSuperType().getRawType().equals(JpaClassAnalyser.javaLangObject)) {
+			if (!c.clazz.getSuperType().getRawType().equals(JreTypes.javaLangObject)) {
 				System.err.println(" -> " + c.clazz.getSuperType());
 				JpaAnalysisResult superC = ClassProcessor.classes.get(c.clazz.getSuperType().getRawType())
 						.get(JpaAnalysisResult.class);

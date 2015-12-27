@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.objectweb.asm.Type;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
@@ -27,9 +29,9 @@ import sql.TableModel;
 import sql.types.IntType;
 import sql.types.SqlType;
 
-public class DataModelCreator {
+public class DataModelCreator2 implements PostAnalyser<DataModelCreatorConfig> {
 	@Inject
-	ClassHierarchy ch;
+	ClassHierarchy2 ch;
 
 	@Inject
 	Resolver resolve;
@@ -87,10 +89,10 @@ public class DataModelCreator {
 
 	void createJoinTable(JpaProperty p, String className, Collection<JpaProperty> collection) {
 
-		ClassModel other = ch.get(p.elementType);
+		ClassData other = ch.get(p.elementType);
 		if (other == null)
 			throw new Error();
-		JpaAnalysisResult ja = other.get(JpaAnalysisResult.class);
+		JpaAnalysisResult2 ja = other.get(JpaAnalysisResult2.class);
 		if (ja == null)
 			throw new Error();
 		if (!ja.isEntity())
@@ -116,10 +118,10 @@ public class DataModelCreator {
 
 	void createJoinTableMany(JpaProperty p, String className, Collection<JpaProperty> collection) {
 
-		ClassModel other = ch.get(p.elementType);
+		ClassData other = ch.get(p.elementType);
 		if (other == null)
 			throw new Error();
-		JpaAnalysisResult ja = other.get(JpaAnalysisResult.class);
+		JpaAnalysisResult2 ja = other.get(JpaAnalysisResult2.class);
 		if (ja == null)
 			throw new Error();
 		if (!ja.isEntity())
@@ -177,10 +179,10 @@ public class DataModelCreator {
 				tableModel = TableModel.Transformations.addColumn(tableModel, b.build());
 				break;
 			case ONE_TO_ONE:
-				ClassModel other = ch.get(p.type);
+				ClassData other = ch.get(p.type);
 				if (other == null)
 					throw new Error();
-				JpaAnalysisResult ja = other.get(JpaAnalysisResult.class);
+				JpaAnalysisResult2 ja = other.get(JpaAnalysisResult2.class);
 				if (ja == null)
 					throw new Error();
 				if (!ja.isEntity())
@@ -199,7 +201,7 @@ public class DataModelCreator {
 				other = ch.get(p.type);
 				if (other == null)
 					throw new Error();
-				ja = other.get(JpaAnalysisResult.class);
+				ja = other.get(JpaAnalysisResult2.class);
 				if (ja == null)
 					throw new Error();
 				if (!ja.isEntity())
@@ -216,7 +218,7 @@ public class DataModelCreator {
 				other = ch.get(p.elementType);
 				if (other == null)
 					throw new Error("no type : " + p.elementType);
-				ja = other.get(JpaAnalysisResult.class);
+				ja = other.get(JpaAnalysisResult2.class);
 				if (ja == null)
 					throw new Error();
 				if (!ja.isEntity())
@@ -226,6 +228,7 @@ public class DataModelCreator {
 
 					TableModel t1 = TableModel.create(target);
 					idProperties = collection.stream().filter((q) -> q.id).collect(Collectors.toList());
+					System.err.println("CN " + className + " " + target + " " + p.joinColumns + " " + idProperties);
 					t1 = addKeyReference(t1, idProperties, p.joinColumns, (oname) -> {
 						throw new Error();
 					});
@@ -323,8 +326,8 @@ public class DataModelCreator {
 		return em;
 	}
 
-	TableId createTableId(JpaAnalysisResult r) {
-		return createTableId(r.getTable(), removeLead(r.clazz.type.getClassName()));
+	TableId createTableId(JpaAnalysisResult2 r) {
+		return createTableId(r.getTable(), removeLead(r.clazz.get(Type.class).getClassName()));
 	}
 
 	@Inject
@@ -334,8 +337,8 @@ public class DataModelCreator {
 
 		dm = DatabaseModel.create();
 
-		for (ClassModel c : ch.getClasses()) {
-			JpaAnalysisResult r = c.get(JpaAnalysisResult.class);
+		for (ClassData c : ch.getClasses()) {
+			JpaAnalysisResult2 r = c.get(JpaAnalysisResult2.class);
 			if (r == null)
 				continue;
 
@@ -345,7 +348,7 @@ public class DataModelCreator {
 			TableId t = createTableId(r);
 
 			TableModel tableModel = TableModel.create(t);
-			tableModel = addColumns(tableModel, r.clazz.type.getClassName(), r.properties.values());
+			tableModel = addColumns(tableModel, r.clazz.get(Type.class).getClassName(), r.properties.values());
 			updateTable(tableModel);
 		}
 

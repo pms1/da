@@ -64,7 +64,7 @@ public class DeploymentAnalyserMain {
 			this.config = config;
 		}
 
-		final AnalyserMetadata<C,A> metadata;
+		final AnalyserMetadata<C, A> metadata;
 		final BeanReference<A> beanReference;
 		C config;
 
@@ -163,7 +163,7 @@ public class DeploymentAnalyserMain {
 
 			Collection<Object> reqs = md.configurator.getRequirements(ana.config);
 
-			reqs.forEach((r) -> requirements.put(ana, r));
+			reqs.forEach(r -> requirements.put(ana, r));
 
 			for (Object r : reqs) {
 				int count = 0;
@@ -181,6 +181,8 @@ public class DeploymentAnalyserMain {
 							BeanReference.forClass(a1.analyser), config);
 
 					internalAnalysis = add(internalAnalysis);
+
+					System.err.println("ADD2 " + r + " " + internalAnalysis);
 
 					provides2.put(internalAnalysis, r);
 
@@ -252,6 +254,7 @@ public class DeploymentAnalyserMain {
 				if (!done.add(ana))
 					continue;
 
+				System.err.println("ADD " + ana);
 				addRequirements(ana);
 			}
 			if (old.size() == anas2.size())
@@ -289,26 +292,27 @@ public class DeploymentAnalyserMain {
 		proc.invokers = new LinkedList<>();
 		for (InternalAnalysis<?, ? extends JarContentProcessor<?>> ana : jarContent) {
 			proc.invokers.add(instantiate(ana));
-			}
+		}
+
+		for (Object o : proc.invokers)
+			System.out.println("jar content processor = " + o);
 
 		proc.classAnalyes = new LinkedList<>();
 		for (InternalAnalysis<?, ? extends ClassAnalysis<?>> ana : r1.resolve(classAna)) {
 			proc.classAnalyes.add(instantiate(ana));
 		}
 
+		for (Object o : proc.classAnalyes)
+			System.out.println("class analyis = " + o);
+
 		for (InternalAnalysis<?, ? extends RootAnalysis<?>> ana : new AnalysisSorter().resolve(root)) {
-			instantiate(ana).run(proc);
+			RootAnalysis<?> analysis = instantiate(ana);
+			System.out.println("root analyis = " + analysis);
+			analysis.run(proc);
 		}
 
-		for (InternalAnalysis<?, ?> ana : r1.resolve(post)) {
-			if (ana.config != null)
-				cc.bind(ana.getClass(), ana.config);
-
-			PostAnalyser aa = (PostAnalyser) r.resolve(ana.beanReference);
-			aa.run();
-
-			if (ana.config != null)
-				cc.unbind(ana.getClass());
+		for (InternalAnalysis<?, ? extends PostAnalyser<?>> ana : r1.resolve(post)) {
+			instantiate(ana).run();
 		}
 
 		cc.deactivate();
@@ -317,15 +321,18 @@ public class DeploymentAnalyserMain {
 	}
 
 	private <C, A extends Analyser<C>> A instantiate(InternalAnalysis<C, A> ana) {
-		if(ana.metadata.config!=null) 
+		if (ana.metadata.config != null)
 			cc.bind(ana.metadata.config, ana.config);
-		
+
 		try {
-		A a = r.resolve(ana.beanReference);
-		return a;
+			try {
+				return r.resolve(ana.beanReference);
+			} catch (RuntimeException e) {
+				throw new RuntimeException("Resolving " + ana.beanReference + " failed : " + e, e);
+			}
 		} finally {
-			if(ana.metadata.config!=null) 
-						cc.unbind(ana.metadata.config);
+			if (ana.metadata.config != null)
+				cc.unbind(ana.metadata.config);
 		}
 	}
 
@@ -448,6 +455,8 @@ public class DeploymentAnalyserMain {
 		public <C, A extends Analyser<C>> AnalyserMetadata<C, A> getAnalyser(Class<A> analyserClass) {
 			@SuppressWarnings("unchecked")
 			AnalyserMetadata<C, A> result = (AnalyserMetadata<C, A>) byAnalyser.get(analyserClass);
+			if (result == null)
+				throw new IllegalArgumentException("Not an anylser: " + analyserClass);
 			return result;
 		}
 

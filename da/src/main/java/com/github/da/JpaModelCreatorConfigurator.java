@@ -3,6 +3,7 @@ package com.github.da;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.github.da.JpaClassAnalyser.TResult;
 import com.github.pms1.c4.classes.annotations.AnnotationScannerRequirement;
 
 public class JpaModelCreatorConfigurator implements Configurator<JpaModelCreatorConfig, JpaModelCreator> {
@@ -13,5 +14,13 @@ public class JpaModelCreatorConfigurator implements Configurator<JpaModelCreator
 	@Override
 	public Collection<Object> getRequirements(JpaModelCreatorConfig config) {
 		return reqs;
+	}
+
+	@Override
+	public JpaModelCreatorConfig createConfiguration(Object requirement) {
+		if (requirement.equals(TResult.class))
+			return JpaModelCreatorConfig.newBuilder().build();
+
+		return null;
 	}
 }

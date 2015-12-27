@@ -4,7 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 @AnaScope
-public class DataModelCreatorConfig extends Analysis<DataModelCreatorConfig,DataModelCreator> {
+public class DataModelCreatorConfig extends Analysis<DataModelCreatorConfig, DataModelCreator2> {
 	private final List<Class<? extends TypeMapper>> typeMappers;
 
 	public interface Builder {
@@ -30,7 +30,7 @@ public class DataModelCreatorConfig extends Analysis<DataModelCreatorConfig,Data
 	}
 
 	public DataModelCreatorConfig(List<Class<? extends TypeMapper>> typeMappers) {
-		super(DataModelCreator.class);
+		super(DataModelCreator2.class);
 		this.typeMappers = typeMappers;
 	}
 

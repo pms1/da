@@ -1,5 +1,5 @@
 package com.github.da;
 
-public interface PostAnalyser<T extends Analysis> extends Analyser<T> {
+public interface PostAnalyser<C> extends Analyser<C> {
 	void run();
 }

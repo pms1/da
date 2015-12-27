@@ -1,5 +1,55 @@
 package com.github.da;
 
+import static com.github.da.JodaTypes.orgJodaTimeDateTime;
+import static com.github.da.JodaTypes.orgJodaTimeLocalDate;
+import static com.github.da.JodaTypes.orgJodaTimeLocalTime;
+import static com.github.da.JpaTypes.javaxPersistenceAttributeOverride;
+import static com.github.da.JpaTypes.javaxPersistenceAttributeOverrides;
+import static com.github.da.JpaTypes.javaxPersistenceBasic;
+import static com.github.da.JpaTypes.javaxPersistenceCollectionTable;
+import static com.github.da.JpaTypes.javaxPersistenceColumn;
+import static com.github.da.JpaTypes.javaxPersistenceElementCollection;
+import static com.github.da.JpaTypes.javaxPersistenceEmbedded;
+import static com.github.da.JpaTypes.javaxPersistenceEmbeddedId;
+import static com.github.da.JpaTypes.javaxPersistenceEnumerated;
+import static com.github.da.JpaTypes.javaxPersistenceGeneratedValue;
+import static com.github.da.JpaTypes.javaxPersistenceId;
+import static com.github.da.JpaTypes.javaxPersistenceJoinColumn;
+import static com.github.da.JpaTypes.javaxPersistenceJoinColumns;
+import static com.github.da.JpaTypes.javaxPersistenceJoinTable;
+import static com.github.da.JpaTypes.javaxPersistenceLob;
+import static com.github.da.JpaTypes.javaxPersistenceManyToMany;
+import static com.github.da.JpaTypes.javaxPersistenceManyToOne;
+import static com.github.da.JpaTypes.javaxPersistenceMapKey;
+import static com.github.da.JpaTypes.javaxPersistenceMapsId;
+import static com.github.da.JpaTypes.javaxPersistenceOneToMany;
+import static com.github.da.JpaTypes.javaxPersistenceOneToOne;
+import static com.github.da.JpaTypes.javaxPersistenceOrderBy;
+import static com.github.da.JpaTypes.javaxPersistenceOrderColumn;
+import static com.github.da.JpaTypes.javaxPersistencePersistenceContext;
+import static com.github.da.JpaTypes.javaxPersistencePostPersist;
+import static com.github.da.JpaTypes.javaxPersistencePostUpdate;
+import static com.github.da.JpaTypes.javaxPersistencePrePersist;
+import static com.github.da.JpaTypes.javaxPersistencePreUpdate;
+import static com.github.da.JpaTypes.javaxPersistencePrimaryKeyJoinColumns;
+import static com.github.da.JpaTypes.javaxPersistenceSequenceGenerator;
+import static com.github.da.JpaTypes.javaxPersistenceTemporal;
+import static com.github.da.JpaTypes.javaxPersistenceTransient;
+import static com.github.da.JpaTypes.javaxPersistenceVersion;
+import static com.github.da.JreTypes.javaLangBoolean;
+import static com.github.da.JreTypes.javaLangByte;
+import static com.github.da.JreTypes.javaLangCharacter;
+import static com.github.da.JreTypes.javaLangDouble;
+import static com.github.da.JreTypes.javaLangEnum;
+import static com.github.da.JreTypes.javaLangFloat;
+import static com.github.da.JreTypes.javaLangInteger;
+import static com.github.da.JreTypes.javaLangLong;
+import static com.github.da.JreTypes.javaLangString;
+import static com.github.da.JreTypes.javaMathBigDecimal;
+import static com.github.da.JreTypes.javaSqlDate;
+import static com.github.da.JreTypes.javaSqlTime;
+import static com.github.da.JreTypes.javaUtilDate;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -200,80 +250,13 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 		}
 	}
 
-	static final Type javaLangObject = Type.getObjectType("java/lang/Object");
-
-	static final Type javaLangBoolean = Type.getObjectType("java/lang/Boolean");
-	static final Type javaLangByte = Type.getObjectType("java/lang/Byte");
-	static final Type javaLangCharacter = Type.getObjectType("java/lang/Character");
-	static final Type javaLangEnum = Type.getObjectType("java/lang/Enum");
-	static final Type javaLangDouble = Type.getObjectType("java/lang/Double");
-	static final Type javaLangFloat = Type.getObjectType("java/lang/Float");
-	static final Type javaLangInteger = Type.getObjectType("java/lang/Integer");
-	static final Type javaLangLong = Type.getObjectType("java/lang/Long");
-	static final Type javaLangString = Type.getObjectType("java/lang/String");
-
-	static final Type javaMathBigDecimal = Type.getObjectType("java/math/BigDecimal");
-
-	static final Type javaUtilDate = Type.getObjectType("java/util/Date");
-
-	static final Type javaSqlDate = Type.getObjectType("java/sql/Date");
-	static final Type javaSqlTime = Type.getObjectType("java/sql/Time");
-
-	static final Type orgJodaTimeDateTime = Type.getObjectType("org/joda/time/DateTime");
-	static final Type orgJodaTimeLocalDate = Type.getObjectType("org/joda/time/LocalDate");
-	static final Type orgJodaTimeLocalTime = Type.getObjectType("org/joda/time/LocalTime");
-
-	static final Type embeddable = Type.getObjectType("javax/persistence/Embeddable");
-	static final Type entity = Type.getObjectType("javax/persistence/Entity");
-	static final Type javaxPersistenceTable = Type.getObjectType("javax/persistence/Table");
-	static final Type javaxPersistenceAccess = Type.getObjectType("javax/persistence/Access");
-	static final Type cacheable = Type.getObjectType("javax/persistence/Cacheable");
-	static final Type mappedSuperclass = Type.getObjectType("javax/persistence/MappedSuperclass");
-	static final Type idClass = Type.getObjectType("javax/persistence/IdClass");
-	static final Type entityListeners = Type.getObjectType("javax/persistence/EntityListeners");
-
-	static final Type javaxPersistenceColumn = Type.getObjectType("javax/persistence/Column");
-	static final Type javaxPersistenceEmbedded = Type.getObjectType("javax/persistence/Embedded");
-	static final Type javaxPersistenceTransient = Type.getObjectType("javax/persistence/Transient");
-	static final Type javaxPersistenceAttributeOverride = Type.getObjectType("javax/persistence/AttributeOverride");
-	static final Type javaxPersistenceAttributeOverrides = Type.getObjectType("javax/persistence/AttributeOverrides");
-	static final Type javaxPersistenceEnumerated = Type.getObjectType("javax/persistence/Enumerated");
-	static final Type javaxPersistenceManyToOne = Type.getObjectType("javax/persistence/ManyToOne");
-	static final Type javaxPersistenceJoinColumn = Type.getObjectType("javax/persistence/JoinColumn");
-	static final Type javaxPersistenceOneToOne = Type.getObjectType("javax/persistence/OneToOne");
-	static final Type javaxPersistenceOneToMany = Type.getObjectType("javax/persistence/OneToMany");
-	static final Type javaxPersistenceBasic = Type.getObjectType("javax/persistence/Basic");
-	static final Type javaxPersistenceOrderColumn = Type.getObjectType("javax/persistence/OrderColumn");
-	static final Type javaxPersistenceId = Type.getObjectType("javax/persistence/Id");
-	static final Type javaxPersistenceSequenceGenerator = Type.getObjectType("javax/persistence/SequenceGenerator");
-	static final Type javaxPersistenceGeneratedValue = Type.getObjectType("javax/persistence/GeneratedValue");
-	static final Type javaxPersistenceVersion = Type.getObjectType("javax/persistence/Version");
-	static final Type javaxPersistenceManyToMany = Type.getObjectType("javax/persistence/ManyToMany");
-	static final Type javaxPersistenceJoinTable = Type.getObjectType("javax/persistence/JoinTable");
-	static final Type javaxPersistenceEmbeddedId = Type.getObjectType("javax/persistence/EmbeddedId");
-	static final Type javaxPersistenceMapsId = Type.getObjectType("javax/persistence/MapsId");
-	static final Type javaxPersistenceJoinColumns = Type.getObjectType("javax/persistence/JoinColumns");
-	static final Type javaxPersistencePrimaryKeyJoinColumns = Type
-			.getObjectType("javax/persistence/PrimaryKeyJoinColumns");
-	static final Type javaxPersistenceTemporal = Type.getObjectType("javax/persistence/Temporal");
-	static final Type javaxPersistenceOrderBy = Type.getObjectType("javax/persistence/OrderBy");
-	static final Type javaxPersistenceLob = Type.getObjectType("javax/persistence/Lob");
-	static final Type javaxPersistenceMapKey = Type.getObjectType("javax/persistence/MapKey");
-	static final Type javaxPersistenceElementCollection = Type.getObjectType("javax/persistence/ElementCollection");
-	static final Type javaxPersistenceCollectionTable = Type.getObjectType("javax/persistence/CollectionTable");
-	static final Type javaxPersistencePrePersist = Type.getObjectType("javax/persistence/PrePersist");
-	static final Type javaxPersistencePreUpdate = Type.getObjectType("javax/persistence/PreUpdate");
-	static final Type javaxPersistencePostPersist = Type.getObjectType("javax/persistence/PostPersist");
-	static final Type javaxPersistencePostUpdate = Type.getObjectType("javax/persistence/PostUpdate");
-	static final Type javaxPersistencePersistenceContext = Type.getObjectType("javax/persistence/PersistenceContext");
-
 	static enum FieldType {
 		ONE_TO_MANY, MANY_TO_ONE, ONE_TO_ONE, MANY_TO_MANY, EMBEDDED, VALUE, ELEMENT_COLLECTION
 	};
 
 	static class TResult {
-		private Map<String, JpaProperty> fieldProperties;
-		private Map<String, JpaProperty> methodProperties;
+		Map<String, JpaProperty> fieldProperties;
+		Map<String, JpaProperty> methodProperties;
 	}
 
 	static interface Model<T> {
@@ -520,19 +503,19 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 								throw new Error();
 							System.err.println("F " + fin);
 
-							if (t.equals(embeddable)) {
+							if (t.equals(JpaTypes.embeddable)) {
 								result.setEmbeddable();
-							} else if (t.equals(entity)) {
+							} else if (t.equals(JpaTypes.entity)) {
 								result.setEntity();
-							} else if (t.equals(javaxPersistenceTable)) {
+							} else if (t.equals(JpaTypes.javaxPersistenceTable)) {
 								result.setTable(genericParse(TableAnnotation.class, fin));
-							} else if (t.equals(javaxPersistenceAccess)) {
+							} else if (t.equals(JpaTypes.javaxPersistenceAccess)) {
 								result.setAccess(genericParse(AccessAnnotation.class, fin).value);
-							} else if (t.equals(cacheable)) {
-							} else if (t.equals(mappedSuperclass)) {
+							} else if (t.equals(JpaTypes.cacheable)) {
+							} else if (t.equals(JpaTypes.mappedSuperclass)) {
 								result.setMappedSuperclass();
-							} else if (t.equals(idClass)) {
-							} else if (t.equals(entityListeners)) {
+							} else if (t.equals(JpaTypes.idClass)) {
+							} else if (t.equals(JpaTypes.entityListeners)) {
 							} else {
 								throw new Error("" + t);
 							}
@@ -548,7 +531,7 @@ public class JpaClassAnalyser implements ClassAnazlyer {
 					property.setColumn(genericParse(ColumnAnnotation.class, fin));
 				} else if (t.equals(javaxPersistenceId)) {
 					property.setId(true);
-				} else if (t.equals(javaxPersistenceAccess)) {
+				} else if (t.equals(JpaTypes.javaxPersistenceAccess)) {
 					property.setAccess(genericParse(AccessAnnotation.class, fin).value);
 				} else if (t.equals(javaxPersistenceEmbedded)) {
 					property.setFieldType(FieldType.EMBEDDED);

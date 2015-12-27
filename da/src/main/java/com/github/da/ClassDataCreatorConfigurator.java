@@ -3,6 +3,8 @@ package com.github.da;
 import com.github.da.ClassDataCreatorConfig.Data;
 import com.google.common.collect.Sets;
 
+import asm.ClassSignature;
+
 public class ClassDataCreatorConfigurator implements Configurator<ClassDataCreatorConfig, ClassDataCreator> {
 
 	@Override
@@ -13,6 +15,10 @@ public class ClassDataCreatorConfigurator implements Configurator<ClassDataCreat
 			return new ClassDataCreatorConfig(Data.CLASS, Data.METHOD);
 		} else if (r.equals(FieldData.class)) {
 			return new ClassDataCreatorConfig(Data.CLASS, Data.FIELD);
+		} else if (r == Data.CLASS_TYPE) {
+			return new ClassDataCreatorConfig(Data.CLASS, Data.CLASS_TYPE);
+		} else if (r.equals(ClassSignature.class)) {
+			return new ClassDataCreatorConfig(Data.CLASS, Data.CLASS_SIGNATURE);
 		} else {
 			return null;
 		}

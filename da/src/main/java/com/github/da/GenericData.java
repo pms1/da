@@ -10,13 +10,17 @@ public abstract class GenericData {
 	public <T> void put(Class<T> class1, T data1) {
 		Object old = data.putIfAbsent(class1, data1);
 		if (old != null)
-			throw new IllegalArgumentException("Already entry for '" + class1 + "'");
+			throw new IllegalArgumentException("Already entry for '" + class1 + "' in '" + this + "'");
+	}
+
+	public <T> T find(Class<T> class1) {
+		return class1.cast(data.get(class1));
 	}
 
 	public <T> T get(Class<T> class1) {
 		T result = class1.cast(data.get(class1));
 		if (result == null)
-			throw new IllegalArgumentException("No entry for '" + class1 + "'");
+			throw new IllegalArgumentException("No entry for '" + class1 + "' in '" + this + "'");
 		return result;
 	}
 

@@ -17,8 +17,8 @@ import com.github.da.TypeUtil;
 		super(Opcodes.ASM5);
 	}
 
-	private List<Object> anon = new LinkedList<>();
-	private Type anonType = null;
+	/* package */ final List<Object> anon = new LinkedList<>();
+	/* package */ Type anonType = null;
 
 	private void anon(Type type, Object value) {
 		if (anonType == null)

@@ -2,8 +2,15 @@ package com.github.da;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class ClassData extends GenericData {
+	private final ClassId classId;
+
+	ClassData(ClassId classId) {
+		Objects.requireNonNull(classId);
+		this.classId = classId;
+	}
 
 	private Map<MethodId, MethodData> methodData = new HashMap<MethodId, MethodData>();
 
@@ -33,5 +40,10 @@ public class ClassData extends GenericData {
 		FieldData old = fieldData.putIfAbsent(classId, classModel);
 		if (old != null)
 			throw new IllegalArgumentException("Duplicate data for " + classId);
+	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "(" + classId + ")";
 	}
 }

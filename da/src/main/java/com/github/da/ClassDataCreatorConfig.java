@@ -11,7 +11,7 @@ import com.google.common.base.Preconditions;
 @AnaScope
 public class ClassDataCreatorConfig {
 	static enum Data {
-		CLASS, METHOD, FIELD
+		CLASS, METHOD, FIELD, CLASS_TYPE, CLASS_SIGNATURE
 	}
 
 	final Set<Data> datas;
