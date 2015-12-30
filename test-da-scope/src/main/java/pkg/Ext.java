@@ -22,6 +22,8 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessBean;
+import javax.enterprise.inject.spi.ProcessInjectionTarget;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 
@@ -118,6 +120,23 @@ public class Ext implements Extension {
 		if (pat.getAnnotatedType().isAnnotationPresent(AnaScope.class)) {
 			types.add(pat.getAnnotatedType());
 			pat.veto();
+		}
+	}
+
+	private <X> void pit(@Observes ProcessInjectionTarget<X> pit) {
+		if (!pit.getAnnotatedType().getJavaClass().getSimpleName().startsWith("T"))
+			return;
+
+		System.err.println("PIT " + pit.getInjectionTarget());
+		for (InjectionPoint ip : pit.getInjectionTarget().getInjectionPoints()) {
+			System.err.println("  PIP " + ip);
+		}
+	}
+
+	private <X> void pb(@Observes ProcessBean<X> pb) {
+		System.err.println("PB " + pb.getBean());
+		for (InjectionPoint ip : pb.getBean().getInjectionPoints()) {
+			System.err.println("  PIP " + ip);
 		}
 	}
 

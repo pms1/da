@@ -22,10 +22,12 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.util.TypeLiteral;
 import javax.inject.Inject;
 
 import com.github.da.Ext.CC;
+import com.github.da.Ext.CC1;
 import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
 import com.google.common.base.Stopwatch;
@@ -321,19 +323,39 @@ public class DeploymentAnalyserMain {
 		return ar;
 	}
 
-	private <C, A extends Analyser<C>> A instantiate(InternalAnalysis<C, A> ana) {
-		if (ana.metadata.config != null)
-			cc.bind(ana.metadata.config, ana.config);
+	@Inject
+	CC1 cc1;
 
+	private <C, A extends Analyser<C>> A instantiate(InternalAnalysis<C, A> ana) {
 		try {
+			cc1.activate();
+
+			if (ana.metadata.config != null) {
+				cc.bind(ana.metadata.config, ana.config);
+
+			}
+
+			for (Type t : ana.metadata.requiredConfigurations) {
+				if (t.equals(ana.metadata.config)) {
+					// cc1.bind(ana.metadata.config, ana.config);
+					throw new Error();
+				} else {
+					throw new Error();
+				}
+			}
 			try {
-				return r.resolve(ana.beanReference);
-			} catch (RuntimeException e) {
-				throw new RuntimeException("Resolving " + ana.beanReference + " failed : " + e, e);
+				try {
+					return r.resolve(ana.beanReference);
+				} catch (RuntimeException e) {
+					throw new RuntimeException("Resolving " + ana.beanReference + " failed : " + e, e);
+				}
+			} finally {
+				if (ana.metadata.config != null) {
+					cc.unbind(ana.metadata.config);
+				}
 			}
 		} finally {
-			if (ana.metadata.config != null)
-				cc.unbind(ana.metadata.config);
+			cc1.deactivate();
 		}
 	}
 
@@ -376,25 +398,41 @@ public class DeploymentAnalyserMain {
 		final Class<C> config;
 		final Configurator<C, A> configurator;
 		final Collection<Provide> provides;
+		final Set<Type> requiredConfigurations;
 
 		AnalyserMetadata(Class<A> analyser, Collection<Provide> provides, Class<C> config,
-				Configurator<C, A> configurator) {
+				Configurator<C, A> configurator, Set<Type> requiredConfigurations) {
 			Objects.requireNonNull(analyser);
 			this.analyser = analyser;
 			Objects.requireNonNull(provides);
 			this.provides = provides;
 			this.config = config;
 			this.configurator = configurator;
+			Objects.requireNonNull(requiredConfigurations);
+			this.requiredConfigurations = Collections.unmodifiableSet(requiredConfigurations);
 		}
 
 		@Override
 		public String toString() {
-			return "Analyser(" + analyser + "," + config + "," + configurator + ")";
+			return "Analyser(" + analyser + "," + config + "," + configurator + "," + requiredConfigurations + ")";
 		}
 	}
 
+	@Inject
+	Ext ext;
+
 	<C, A extends Analyser<C>, D extends Configurator<C, A>> AnalyserMetadata<C, A> createAnalyserMetadata(
-			Class<A> beanClass) {
+			Bean<A> bean) {
+
+		Set<Type> requiredConfigurations = new HashSet<>();
+
+		for (InjectionPoint ip : bean.getInjectionPoints()) {
+			if (ext.isConfiguration(ip.getType())) {
+				requiredConfigurations.add(ip.getType());
+			}
+		}
+
+		Class<A> beanClass = (Class<A>) bean.getBeanClass();
 		TypeToken<A> analyserToken = TypeToken.of(beanClass);
 
 		@SuppressWarnings("unchecked")
@@ -417,18 +455,16 @@ public class DeploymentAnalyserMain {
 			else if (select.isUnsatisfied())
 				throw new Error();
 
-			return new AnalyserMetadata<C, A>(beanClass, provides, noConfig ? null : configClass, select.get());
+			return new AnalyserMetadata<C, A>(beanClass, provides, noConfig ? null : configClass, select.get(),
+					requiredConfigurations);
 		case 0:
 			if (noConfig) {
-				return new AnalyserMetadata<C, A>(beanClass, provides, null, null);
+				return new AnalyserMetadata<C, A>(beanClass, provides, null, null, requiredConfigurations);
 			} else
 				throw new Error("No configurators found for " + configuratorType);
 		default:
 			throw new Error("Multiple configurators found for " + configuratorType + ": " + beans);
 		}
-		// } else {
-		// return new AnalyserMetadata<C, A>(beanClass, provides);
-		// }
 	}
 
 	static class AnalysersMetadata {
@@ -468,7 +504,7 @@ public class DeploymentAnalyserMain {
 	void initAnalysers() {
 		List<AnalyserMetadata<?, ?>> metadata = new LinkedList<>();
 		for (Bean<?> b : bm.getBeans(analyserType)) {
-			metadata.add(createAnalyserMetadata((Class) b.getBeanClass()));
+			metadata.add(createAnalyserMetadata((Bean) b));
 		}
 		analysersMetadata = new AnalysersMetadata(metadata);
 	}

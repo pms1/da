@@ -1,7 +1,11 @@
 package com.github.da;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -59,6 +63,20 @@ public class Collectors2 {
 	}
 
 	public static void main(String[] args) {
+		Integer only = Arrays.asList(1).stream().collect(findOnly());
+		assert only == 1;
+		try {
+			only = Arrays.asList(0, 1).stream().collect(findOnly());
+			throw new Error();
+		} catch (IllegalArgumentException e) {
+
+		}
+		try {
+			only = Collections.<Integer> emptyList().stream().collect(findOnly());
+			throw new Error();
+		} catch (NoSuchElementException e) {
+
+		}
 
 		Multimap<Integer, String> mm = new Random(0).ints(100, 1, 50).boxed()
 				.collect(toMultimap((i) -> i % 10, (i) -> i.toString(), HashMultimap::create));
@@ -68,5 +86,29 @@ public class Collectors2 {
 		Multimap<Integer, String> mm2 = x.stream()
 				.collect(toMultimapFlatened((x1) -> x1.key.stream(), (x1) -> x1.value, HashMultimap::create));
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T, K, U> Collector<T, ?, T> findOnly() {
+		Supplier<Object[]> supplier = () -> {
+			return new Object[1];
+		};
+		BiConsumer<Object[], T> accumulator = (k, t) -> {
+			if (k[0] == null)
+				k[0] = t;
+			else
+				throw new IllegalArgumentException("two or more");
+		};
+		BinaryOperator<Object[]> combiner = (k1, k2) -> {
+			if (true)
+				throw new Error();
+			return null;
+		};
+		Function<Object[], T> finisher = (k) -> {
+			if (k[0] == null)
+				throw new NoSuchElementException();
+			return (T) k[0];
+		};
+		return Collector.of(supplier, accumulator, combiner, finisher);
 	}
 }

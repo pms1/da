@@ -11,10 +11,10 @@ import javax.inject.Inject;
  * @author pms1
  *
  */
-class ConfigurationExtension implements Extension {
+public class ConfigurationExtension implements Extension {
 	private final AnalysisConfiguration analysisConfiguration;
 
-	ConfigurationExtension(AnalysisConfiguration analysisConfiguration) {
+	public ConfigurationExtension(AnalysisConfiguration analysisConfiguration) {
 		Objects.requireNonNull(analysisConfiguration);
 		this.analysisConfiguration = analysisConfiguration;
 	}

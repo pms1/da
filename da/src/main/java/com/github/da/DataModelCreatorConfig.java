@@ -3,7 +3,7 @@ package com.github.da;
 import java.util.LinkedList;
 import java.util.List;
 
-@AnaScope
+@Configuration
 public class DataModelCreatorConfig extends Analysis<DataModelCreatorConfig, DataModelCreator2> {
 	private final List<Class<? extends TypeMapper>> typeMappers;
 
