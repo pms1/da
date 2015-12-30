@@ -22,6 +22,7 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Default;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
+import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedField;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
@@ -31,8 +32,10 @@ import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessBean;
 import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
+import javax.inject.Qualifier;
 
 import com.github.da.t.AD;
+import com.github.da.t.Configured;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -61,7 +64,7 @@ public class Ext implements Extension {
 				throw new ContextNotActiveException();
 
 			if (!bindings.getLast().containsKey(contextual))
-				throw new Error("Unbound " + contextual);
+				throw new Error("Unbound bean: " + contextual);
 			return (T) bindings.getLast().get(contextual);
 		}
 
@@ -188,106 +191,92 @@ public class Ext implements Extension {
 		}
 	}
 
-	static class DefaultAnn extends AnnotationLiteral<Default> {
-
-	}
-
 	private Set<AnnotatedType<?>> typesAnaScope = new HashSet<>();
-	private Set<AnnotatedType<?>> typesConfiguration = new HashSet<>();
 
-	private Set<Type> typesConfiguration2 = new HashSet<>();
-
-	public boolean isConfiguration(Type type) {
-		return typesConfiguration2.contains(type);
-	}
-
-	private Set<IndirectData> t = new HashSet<>();
-
-	static <T> TypeToken<List<T>> listOf(TypeToken<T> t) {
+	private static <T> TypeToken<List<T>> listOf(TypeToken<T> t) {
 		return new TypeToken<List<T>>() {
 		}.where(new TypeParameter<T>() {
 		}, t);
 	}
 
-	static class Dep {
-		private final TypeToken<?> type;
-
-		Dep(TypeToken<?> type) {
-			this.type = type;
-		}
-	}
-
-	static class DirectDep extends Dep {
-
-		DirectDep(TypeToken<?> type) {
-			super(type);
-		}
-
-	}
-
-	static class IndirectDep extends Dep {
-
-		IndirectDep(TypeToken<?> type) {
-			super(type);
-			// TODO Auto-generated constructor stub
-		}
-
-	}
-
-	private Multimap<TypeToken<?>, Dep> deps = HashMultimap.create();
-
-	private Multimap<Bean<?>, Dep> beanDeps = HashMultimap.create();
+	private Multimap<Bean<?>, ConfigurationBean<?>> beanDeps2 = HashMultimap.create();
 
 	private <X> void processBean(@Observes ProcessBean<X> b) {
-		for (InjectionPoint ip : b.getBean().getInjectionPoints()) {
-			TypeToken<?> tt = TypeToken.of(ip.getType());
-
-			for (Dep d : deps.get(tt))
-				beanDeps.put(b.getBean(), d);
-		}
+		for (InjectionPoint ip : b.getBean().getInjectionPoints())
+			for (ConfigurationBean<?> b1 : configurationBeans)
+				if (resolves(b1, ip))
+					beanDeps2.put(b.getBean(), b1);
 	}
+
+	private static boolean resolves(Bean<?> b, InjectionPoint ip) {
+		TypeToken<?> tip = TypeToken.of(ip.getType());
+		if (!b.getTypes().stream().anyMatch(t -> tip.isAssignableFrom(t)))
+			return false;
+
+		// FIXME ignore @NonBinding here / implement correct algorithm from CDI
+		for (Annotation a : ip.getQualifiers())
+			if (!b.getQualifiers().stream().anyMatch(a1 -> a1.equals(a)))
+				return false;
+
+		return true;
+	}
+
+	private List<ConfigurationBean<?>> configurationBeans = new LinkedList<>();
+
+	private static final Annotation configuredLiteratal = new AnnotationLiteral<Configured>() {
+	};
+
+	private static final Annotation defaultLiteratal = new AnnotationLiteral<Default>() {
+	};
 
 	private <X> void vetoOurScopeTypes(@Observes ProcessAnnotatedType<X> pat) {
 		if (pat.getAnnotatedType().isAnnotationPresent(Configuration.class)) {
-			typesConfiguration.add(pat.getAnnotatedType());
-			typesConfiguration2.add(pat.getAnnotatedType().getBaseType());
 			pat.veto();
 
-			deps.put(TypeToken.of(pat.getAnnotatedType().getBaseType()),
-					new DirectDep(TypeToken.of(pat.getAnnotatedType().getBaseType())));
+			if (!getQualifiers(pat.getAnnotatedType()).isEmpty())
+				throw new Error();
+
+			configurationBeans
+					.add(createConfigurationConfigurationBean(TypeToken.of(pat.getAnnotatedType().getBaseType())));
 
 			for (AnnotatedField<? super X> f : pat.getAnnotatedType().getFields()) {
 				TypeToken<?> x = TypeToken.of(f.getBaseType());
 				if (x.getRawType().equals(List.class)) {
 					TypeToken<?> type = x.resolveType(List.class.getTypeParameters()[0]);
 					if (TypeToken.of(AD.class).isAssignableFrom(type)) {
-						TypeToken<?> token = type.resolveType(AD.class.getTypeParameters()[0]);
+						TypeToken<?> analysisType = type.resolveType(AD.class.getTypeParameters()[0]);
 
-						TypeToken t2 = listOf(token);
+						Set<Annotation> qualifiers = getQualifiers(f);
+						qualifiers.add(configuredLiteratal);
 
-						deps.put(t2, new IndirectDep(t2));
-
-						IndirectData id = new IndirectData();
-						id.beanType = t2;
-						id.configurationClass = pat.getAnnotatedType().getJavaClass();
-						id.field = f;
-						id.targetClass = token.getRawType();
-						t.add(id);
+						configurationBeans.add(createAnalyserListConfigurationBean(listOf(analysisType).getType(),
+								qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
 					}
+				} else if (TypeToken.of(AD.class).isAssignableFrom(x.getRawType())) {
+					TypeToken<?> analysisType = x.resolveType(AD.class.getTypeParameters()[0]);
+
+					Set<Annotation> qualifiers = getQualifiers(f);
+					qualifiers.add(configuredLiteratal);
+
+					configurationBeans
+							.add(createAnalyserConfigurationBean(analysisType.getType(), analysisType.getRawType(),
+									qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
 				}
 			}
 		}
+
 		if (pat.getAnnotatedType().isAnnotationPresent(AnaScope.class)) {
 			typesAnaScope.add(pat.getAnnotatedType());
 			pat.veto();
 		}
 	}
 
-	static private class IndirectData {
-		AnnotatedField<?> field;
-		TypeToken<?> beanType;
-		Class<?> configurationClass;
-		protected Class<?> targetClass;
+	private static Set<Annotation> getQualifiers(Annotated f) {
+		Set<Annotation> qualifiers = new HashSet<>();
+		for (Annotation a : f.getAnnotations())
+			if (a.annotationType().isAnnotationPresent(Qualifier.class))
+				qualifiers.add(a);
+		return qualifiers;
 	}
 
 	private static <T> Bean<T> createBean(Class<? extends Annotation> scope, AnnotatedType<T> t) {
@@ -311,7 +300,7 @@ public class Ext implements Extension {
 
 			@Override
 			public Set<Annotation> getQualifiers() {
-				return Sets.newHashSet(new DefaultAnn());
+				return Sets.newHashSet(defaultLiteratal);
 			}
 
 			@Override
@@ -357,8 +346,9 @@ public class Ext implements Extension {
 
 	}
 
-	private static <T> ConfigurationBean<T> createBean2(IndirectData id) {
-		return new ConfigurationBeanIndirect<T>() {
+	private static <T> ConfigurationBean<T> createAnalyserListConfigurationBean(Type type, Set<Annotation> qualifiers,
+			Class<?> configurationClass, AnnotatedField<?> f, Class<?> targetClass) {
+		return new AnalyserListConfigurationBean<T>() {
 
 			@Override
 			public T create(CreationalContext<T> creationalContext) {
@@ -372,12 +362,12 @@ public class Ext implements Extension {
 
 			@Override
 			public Set<Type> getTypes() {
-				return Sets.newHashSet(Object.class, id.beanType.getType());
+				return Sets.newHashSet(Object.class, type);
 			}
 
 			@Override
 			public Set<Annotation> getQualifiers() {
-				return Sets.newHashSet(new DefaultAnn());
+				return qualifiers;
 			}
 
 			@Override
@@ -402,7 +392,7 @@ public class Ext implements Extension {
 
 			@Override
 			public Class<?> getBeanClass() {
-				return id.beanType.getRawType();
+				return List.class;
 			}
 
 			@Override
@@ -417,7 +407,7 @@ public class Ext implements Extension {
 
 			@Override
 			public String toString() {
-				return "ConfigurationBeanIndirect [" + id.beanType + "]";
+				return "AnalyserListConfigurationBean [" + type + "]";
 			}
 
 			@Override
@@ -427,13 +417,13 @@ public class Ext implements Extension {
 
 			@Override
 			public Class<?> getConfigurationClass() {
-				return id.configurationClass;
+				return configurationClass;
 			}
 
 			@Override
 			public List<?> extract(Object config) {
 				try {
-					return (List) id.field.getJavaMember().get(config);
+					return (List<?>) f.getJavaMember().get(config);
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					throw new RuntimeException(e);
 				}
@@ -441,14 +431,106 @@ public class Ext implements Extension {
 
 			@Override
 			public Class<?> getTargetClass() {
-				return id.targetClass;
+				return targetClass;
 			}
 		};
 
 	}
 
-	private static <T> ConfigurationBean<T> createBean3(TypeToken<T> t) {
-		return new ConfigurationBeanDirect<T>() {
+	private static <T> ConfigurationBean<T> createAnalyserConfigurationBean(Type type, Class<T> clazz,
+			Set<Annotation> qualifiers, Class<?> configurationClass, AnnotatedField<?> f, Class<?> targetClass) {
+		return new AnalyserConfigurationBean<T>() {
+
+			@Override
+			public T create(CreationalContext<T> creationalContext) {
+				throw new Error();
+			}
+
+			@Override
+			public void destroy(T instance, CreationalContext<T> creationalContext) {
+				throw new Error();
+			}
+
+			@Override
+			public Set<Type> getTypes() {
+				return Sets.newHashSet(Object.class, type);
+			}
+
+			@Override
+			public Set<Annotation> getQualifiers() {
+				return qualifiers;
+			}
+
+			@Override
+			public Class<? extends Annotation> getScope() {
+				return Configuration.class;
+			}
+
+			@Override
+			public String getName() {
+				return null;
+			}
+
+			@Override
+			public Set<Class<? extends Annotation>> getStereotypes() {
+				return Collections.emptySet();
+			}
+
+			@Override
+			public boolean isAlternative() {
+				return false;
+			}
+
+			@Override
+			public Class<?> getBeanClass() {
+				return clazz;
+			}
+
+			@Override
+			public Set<InjectionPoint> getInjectionPoints() {
+				return Collections.emptySet();
+			}
+
+			@Override
+			public boolean isNullable() {
+				throw new Error();
+			}
+
+			@Override
+			public String toString() {
+				return "AnaylserConfigurationBean [" + type + "]";
+			}
+
+			@Override
+			public void accept(ConfigurationBeanVisitor visitor) {
+				visitor.visit(this);
+			}
+
+			@Override
+			public Class<?> getConfigurationClass() {
+				return configurationClass;
+			}
+
+			@Override
+			public Object extract(Object config) {
+				try {
+					f.getJavaMember().setAccessible(true);
+					return f.getJavaMember().get(config);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					throw new RuntimeException(e);
+				}
+			}
+
+			@Override
+			public Class<?> getTargetClass() {
+				return targetClass;
+			}
+		};
+
+	}
+
+	private static <T> ConfigurationBean<T> createConfigurationConfigurationBean(TypeToken<T> t) {
+		return new ConfigurationConfigurationBean<T>() {
 
 			@Override
 			public T create(CreationalContext<T> creationalContext) {
@@ -467,7 +549,7 @@ public class Ext implements Extension {
 
 			@Override
 			public Set<Annotation> getQualifiers() {
-				return Sets.newHashSet(new DefaultAnn());
+				return Sets.newHashSet(defaultLiteratal);
 			}
 
 			@Override
@@ -507,7 +589,7 @@ public class Ext implements Extension {
 
 			@Override
 			public String toString() {
-				return "ExtBean3 with type " + t;
+				return "ConfigurationBeanDirect [" + t + "]";
 			}
 
 			@Override
@@ -528,17 +610,7 @@ public class Ext implements Extension {
 			beans.add(b);
 		}
 
-		for (AnnotatedType<?> t : typesConfiguration) {
-			ConfigurationBean<?> b = createBean3(TypeToken.of(t.getBaseType()));
-			abd.addBean(b);
-			beans2.put(TypeToken.of(t.getBaseType()), b);
-		}
-
-		for (IndirectData t1 : t) {
-			ConfigurationBean<?> b = createBean2(t1);
-			abd.addBean(b);
-			beans2.put(t1.beanType, b);
-		}
+		configurationBeans.forEach(abd::addBean);
 	}
 
 	private Map<TypeToken<?>, ConfigurationBean<?>> beans2 = new HashMap<>();
@@ -546,19 +618,29 @@ public class Ext implements Extension {
 	private Set<Bean<?>> beans = new HashSet<>();
 
 	public static interface ConfigurationBeanVisitor {
-		<T> void visit(ConfigurationBeanDirect<T> bean);
+		<T> void visit(ConfigurationConfigurationBean<T> bean);
 
-		<T> void visit(ConfigurationBeanIndirect<T> bean);
+		<T> void visit(AnalyserListConfigurationBean<T> bean);
+
+		<T> void visit(AnalyserConfigurationBean<T> bean);
 	}
 
 	public static interface ConfigurationBean<T> extends Bean<T> {
 		void accept(ConfigurationBeanVisitor visitor);
 	}
 
-	public static interface ConfigurationBeanDirect<T> extends ConfigurationBean<T> {
+	public static interface ConfigurationConfigurationBean<T> extends ConfigurationBean<T> {
 	}
 
-	public static interface ConfigurationBeanIndirect<T> extends ConfigurationBean<T> {
+	public static interface AnalyserConfigurationBean<T> extends ConfigurationBean<T> {
+		Class<?> getConfigurationClass();
+
+		Object extract(Object config);
+
+		Class<?> getTargetClass();
+	}
+
+	public static interface AnalyserListConfigurationBean<T> extends ConfigurationBean<T> {
 		Class<?> getConfigurationClass();
 
 		List<?> extract(Object config);
@@ -568,16 +650,7 @@ public class Ext implements Extension {
 
 	public Collection<ConfigurationBean<?>> getDependencies(Bean<?> bean) {
 		Collection<ConfigurationBean<?>> result = new LinkedList<>();
-		for (Dep e : beanDeps.get(bean)) {
-			result.add(resolve(e));
-		}
+		beanDeps2.get(bean).forEach(result::add);
 		return result;
-	}
-
-	private ConfigurationBean<?> resolve(Dep e) {
-		ConfigurationBean<?> bean = beans2.get(e.type);
-		if (bean == null)
-			throw new Error("unresolved " + bean);
-		return bean;
 	}
 }

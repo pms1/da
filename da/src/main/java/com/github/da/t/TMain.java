@@ -15,10 +15,11 @@ import com.github.da.AnalysisConfiguration;
 import com.github.da.Collectors2;
 import com.github.da.ConfigurationExtension;
 import com.github.da.Ext;
+import com.github.da.Ext.AnalyserConfigurationBean;
 import com.github.da.Ext.CC1;
 import com.github.da.Ext.ConfigurationBean;
-import com.github.da.Ext.ConfigurationBeanDirect;
-import com.github.da.Ext.ConfigurationBeanIndirect;
+import com.github.da.Ext.ConfigurationConfigurationBean;
+import com.github.da.Ext.AnalyserListConfigurationBean;
 import com.github.da.Ext.ConfigurationBeanVisitor;
 import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
@@ -63,7 +64,7 @@ public class TMain {
 				dep.accept(new ConfigurationBeanVisitor() {
 
 					@Override
-					public <T1> void visit(ConfigurationBeanDirect<T1> bean) {
+					public <T1> void visit(ConfigurationConfigurationBean<T1> bean) {
 
 						Object config = Arrays.stream(configs).filter((c) -> c.getClass().equals(bean.getBeanClass()))
 								.collect(Collectors2.findOnly());
@@ -72,7 +73,30 @@ public class TMain {
 					}
 
 					@Override
-					public <T1> void visit(ConfigurationBeanIndirect<T1> bean) {
+					public <T1> void visit(AnalyserConfigurationBean<T1> bean) {
+						System.err.println("CONFIG CLASS " + bean.getConfigurationClass());
+
+						Object config = Arrays.stream(configs)
+								.filter((c) -> c.getClass().equals(bean.getConfigurationClass()))
+								.collect(Collectors2.findOnly());
+
+						System.err.println("CONFIG " + config);
+
+						Object dconfig = bean.extract(config);
+
+						Object value;
+
+						if (dconfig != null) {
+							value = instantiate(bean.getTargetClass(), dconfig);
+						} else {
+							value = null;
+						}
+
+						cc1.bind(bean, value);
+					}
+
+					@Override
+					public <T1> void visit(AnalyserListConfigurationBean<T1> bean) {
 						System.err.println("CONFIG CLASS " + bean.getConfigurationClass());
 
 						Object config = Arrays.stream(configs)
@@ -132,6 +156,18 @@ public class TMain {
 		{
 			A1 a1 = instantiate(A1.class, new C1(), new C2());
 			System.err.println("A1=" + a1);
+		}
+
+		{
+			A3 a3 = instantiate(A3.class);
+			System.err.println("A3=" + a3);
+		}
+
+		{
+			A31Config a31c = new A31Config();
+			a31c.a41c = new A41Config();
+			A31 a31 = instantiate(A31.class, a31c);
+			System.err.println("A3=" + a31);
 		}
 
 		System.err.println("\ndone\n");

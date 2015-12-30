@@ -22,7 +22,6 @@ import javax.enterprise.inject.Any;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.util.TypeLiteral;
 import javax.inject.Inject;
 
@@ -426,11 +425,11 @@ public class DeploymentAnalyserMain {
 
 		Set<Type> requiredConfigurations = new HashSet<>();
 
-		for (InjectionPoint ip : bean.getInjectionPoints()) {
-			if (ext.isConfiguration(ip.getType())) {
-				requiredConfigurations.add(ip.getType());
-			}
-		}
+		// for (InjectionPoint ip : bean.getInjectionPoints()) {
+		// if (ext.isConfiguration(ip.getType())) {
+		// requiredConfigurations.add(ip.getType());
+		// }
+		// }
 
 		Class<A> beanClass = (Class<A>) bean.getBeanClass();
 		TypeToken<A> analyserToken = TypeToken.of(beanClass);

@@ -12,6 +12,7 @@ public class A1 implements A {
 	C2 c2;
 
 	@Inject
+	@Configured
 	List<A2> a2;
 
 	@Override
