@@ -1,7 +1,11 @@
 package com.github.da;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.GenericDeclaration;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +39,7 @@ import javax.inject.Inject;
 import javax.inject.Qualifier;
 
 import com.github.da.t.AD;
+import com.github.da.t.AnalyserConfiguration;
 import com.github.da.t.Configured;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
@@ -43,7 +48,99 @@ import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 
+import utils.TypeUtils;
+import utils.TypeVisitor;
+
 public class Ext implements Extension {
+
+	private static class DumpTypeVisitor implements TypeVisitor<Void> {
+		String prefix;
+		LinkedList<String> prefixes = new LinkedList<>();
+
+		DumpTypeVisitor() {
+			prefix = "";
+		}
+
+		DumpTypeVisitor(String prefix) {
+			this.prefix = prefix;
+		}
+
+		private void pushPrefix(String prefix) {
+			prefixes.push(prefix);
+			this.prefix += prefix;
+		}
+
+		private void popPrefix() {
+			String p = prefixes.pop();
+			this.prefix = prefix.substring(0, this.prefix.length() - p.length());
+		}
+
+		@Override
+		public <T> Void visit(Class<T> v) {
+			System.out.println(prefix + "Class " + v.getTypeName());
+			return null;
+		}
+
+		@Override
+		public <D extends GenericDeclaration> Void visit(TypeVariable<D> v) {
+			System.out.println(prefix + "TypeVariable " + v.getTypeName());
+			pushPrefix("  ");
+			System.out.println(prefix + "genericDeclaration " + v.getGenericDeclaration());
+
+			int arg = 0;
+			for (Type t : v.getBounds()) {
+				System.out.println(prefix + "bound[" + arg + "]");
+				pushPrefix("  ");
+				TypeVisitor.accept(t, this);
+				popPrefix();
+				++arg;
+			}
+			popPrefix();
+			return null;
+		}
+
+		@Override
+		public <T> Void visit(ParameterizedType v) {
+			System.out.println(prefix + "ParameterizedType " + v.getTypeName());
+			pushPrefix("  ");
+
+			int arg = 0;
+			for (Type t : v.getActualTypeArguments()) {
+				System.out.println(prefix + "actualTypeArgument[" + arg + "]");
+				pushPrefix("  ");
+				TypeVisitor.accept(t, this);
+				popPrefix();
+				++arg;
+			}
+			popPrefix();
+			return null;
+		}
+
+		@Override
+		public Void visit(WildcardType v) {
+			System.out.println(prefix + "WildcardType " + v.getTypeName());
+			pushPrefix("  ");
+
+			int arg = 0;
+			for (Type t : v.getLowerBounds()) {
+				System.out.println(prefix + "lowerBound[" + arg + "]");
+				pushPrefix("  ");
+				TypeVisitor.accept(t, this);
+				popPrefix();
+				++arg;
+			}
+			arg = 0;
+			for (Type t : v.getUpperBounds()) {
+				System.out.println(prefix + "upperBound[" + arg + "]");
+				pushPrefix("  ");
+				TypeVisitor.accept(t, this);
+				popPrefix();
+				++arg;
+			}
+			popPrefix();
+			return null;
+		}
+	}
 
 	public class CC1 implements AlterableContext {
 
@@ -251,6 +348,28 @@ public class Ext implements Extension {
 
 						configurationBeans.add(createAnalyserListConfigurationBean(listOf(analysisType).getType(),
 								qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
+					} else if (TypeToken.of(AnalyserConfiguration.class).isAssignableFrom(type)) {
+						Type configType = TypeUtils.resolve(f.getBaseType(), List.class.getTypeParameters()[0]);
+						Type analysisType = TypeUtils.resolve(configType, AnalyserConfiguration.class.getTypeParameters()[0]);
+
+						analysisType = TypeVisitor.accept(analysisType, new TypeVisitor<Type>() {
+							@Override
+							public Type visit(WildcardType v) {
+								if (v.getUpperBounds().length == 1 && v.getLowerBounds().length == 0)
+									return v.getUpperBounds()[0];
+								else
+									throw new Error("v=" + v);
+							}
+						});
+
+						Set<Annotation> qualifiers = getQualifiers(f);
+						qualifiers.add(configuredLiteratal);
+
+						configurationBeans
+								.add(createAnalyserListConfigurationBean(listOf(TypeToken.of(analysisType)).getType(),
+										qualifiers, pat.getAnnotatedType().getJavaClass(), f, (Class) analysisType));
+					} else {
+						System.err.println("NOT CONFIG1 " + f.getJavaMember());
 					}
 				} else if (TypeToken.of(AD.class).isAssignableFrom(x.getRawType())) {
 					TypeToken<?> analysisType = x.resolveType(AD.class.getTypeParameters()[0]);
@@ -261,6 +380,19 @@ public class Ext implements Extension {
 					configurationBeans
 							.add(createAnalyserConfigurationBean(analysisType.getType(), analysisType.getRawType(),
 									qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
+				} else if (TypeToken.of(AnalyserConfiguration.class).isAssignableFrom(x.getRawType())) {
+
+					TypeToken<?> analysisType = x.resolveType(AnalyserConfiguration.class.getTypeParameters()[0]);
+
+					Set<Annotation> qualifiers = getQualifiers(f);
+					qualifiers.add(configuredLiteratal);
+
+					configurationBeans
+							.add(createAnalyserConfigurationBean(analysisType.getType(), analysisType.getRawType(),
+									qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
+
+				} else {
+					System.err.println("NOT CONFIG0 " + f.getJavaMember());
 				}
 			}
 		}
@@ -423,6 +555,7 @@ public class Ext implements Extension {
 			@Override
 			public List<?> extract(Object config) {
 				try {
+					f.getJavaMember().setAccessible(true);
 					return (List<?>) f.getJavaMember().get(config);
 				} catch (IllegalArgumentException | IllegalAccessException e) {
 					throw new RuntimeException(e);

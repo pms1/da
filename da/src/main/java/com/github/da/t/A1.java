@@ -15,6 +15,10 @@ public class A1 implements A {
 	@Configured
 	List<A2> a2;
 
+	@Inject
+	@Configured
+	List<A2> a21;
+
 	@Override
 	public String toString() {
 		return super.toString() + "(a2=" + a2 + ")";
