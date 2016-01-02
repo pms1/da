@@ -167,7 +167,7 @@ public class TMain {
 			AnalyserMetadata<A, C> metadata = analysersMetadata.get(c);
 
 			System.err.println(c + " -> " + metadata);
-			if (metadata.configurator != null) {
+			if (metadata != null && metadata.configurator != null) {
 
 				for (Iterator<AnalyserConfiguration<?>> ia = anas.iterator(); ia.hasNext();) {
 					AnalyserConfiguration<?> a = ia.next();
@@ -249,6 +249,12 @@ public class TMain {
 		for (Object o : r.anas) {
 			System.err.println("FINAL " + o);
 		}
+
+		System.err.println("START");
+		for (RootAnalysis rootAnaylsis : create(r.anas, RootAnalysis.class)) {
+			rootAnaylsis.run();
+		}
+		System.err.println("END");
 		// cc1.activate();
 		// cc1.bind(C1.class, new C1());
 		// cc1.bind(C2.class, new C2());
@@ -296,6 +302,19 @@ public class TMain {
 		}
 
 		System.err.println("\ndone\n");
+	}
+
+	private <T> List<T> create(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
+		List<T> instances = new LinkedList<>();
+
+		for (AnalyserConfiguration<?> a : anas) {
+			System.err.println("C " + class1 + " " + a.getAnalyser());
+			if (class1.isAssignableFrom(a.getAnalyser())) {
+				instances.add(instantiate(a.getAnalyser().asSubclass(class1), a));
+			}
+		}
+
+		return instances;
 	}
 
 	static class TMUser {

@@ -38,7 +38,6 @@ import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 
-import com.github.da.t.AD;
 import com.github.da.t.AnalyserConfiguration;
 import com.github.da.t.Configured;
 import com.google.common.base.Preconditions;
@@ -298,11 +297,12 @@ public class Ext implements Extension {
 
 	private Multimap<Bean<?>, ConfigurationBean<?>> beanDeps2 = HashMultimap.create();
 
-	private <X> void processBean(@Observes ProcessBean<X> b) {
-		for (InjectionPoint ip : b.getBean().getInjectionPoints())
+	/* private */ <X> void processBean(@Observes ProcessBean<X> b) {
+		for (InjectionPoint ip : b.getBean().getInjectionPoints()) {
 			for (ConfigurationBean<?> b1 : configurationBeans)
 				if (resolves(b1, ip))
 					beanDeps2.put(b.getBean(), b1);
+		}
 	}
 
 	private static boolean resolves(Bean<?> b, InjectionPoint ip) {
@@ -340,15 +340,7 @@ public class Ext implements Extension {
 				TypeToken<?> x = TypeToken.of(f.getBaseType());
 				if (x.getRawType().equals(List.class)) {
 					TypeToken<?> type = x.resolveType(List.class.getTypeParameters()[0]);
-					if (TypeToken.of(AD.class).isAssignableFrom(type)) {
-						TypeToken<?> analysisType = type.resolveType(AD.class.getTypeParameters()[0]);
-
-						Set<Annotation> qualifiers = getQualifiers(f);
-						qualifiers.add(configuredLiteratal);
-
-						configurationBeans.add(createAnalyserListConfigurationBean(listOf(analysisType).getType(),
-								qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
-					} else if (TypeToken.of(AnalyserConfiguration.class).isAssignableFrom(type)) {
+					if (TypeToken.of(AnalyserConfiguration.class).isAssignableFrom(type)) {
 						Type configType = TypeUtils.resolve(f.getBaseType(), List.class.getTypeParameters()[0]);
 						Type analysisType = TypeUtils.resolve(configType,
 								AnalyserConfiguration.class.getTypeParameters()[0]);
@@ -361,6 +353,11 @@ public class Ext implements Extension {
 								else
 									throw new Error("v=" + v);
 							}
+
+							@Override
+							public <T> Type visit(Class<T> v) {
+								return v;
+							}
 						});
 
 						Set<Annotation> qualifiers = getQualifiers(f);
@@ -372,15 +369,6 @@ public class Ext implements Extension {
 					} else {
 						System.err.println("NOT CONFIG1 " + f.getJavaMember());
 					}
-				} else if (TypeToken.of(AD.class).isAssignableFrom(x.getRawType())) {
-					TypeToken<?> analysisType = x.resolveType(AD.class.getTypeParameters()[0]);
-
-					Set<Annotation> qualifiers = getQualifiers(f);
-					qualifiers.add(configuredLiteratal);
-
-					configurationBeans
-							.add(createAnalyserConfigurationBean(analysisType.getType(), analysisType.getRawType(),
-									qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
 				} else if (TypeToken.of(AnalyserConfiguration.class).isAssignableFrom(x.getRawType())) {
 
 					TypeToken<?> analysisType = x.resolveType(AnalyserConfiguration.class.getTypeParameters()[0]);
@@ -746,8 +734,6 @@ public class Ext implements Extension {
 
 		configurationBeans.forEach(abd::addBean);
 	}
-
-	private Map<TypeToken<?>, ConfigurationBean<?>> beans2 = new HashMap<>();
 
 	private Set<Bean<?>> beans = new HashSet<>();
 
