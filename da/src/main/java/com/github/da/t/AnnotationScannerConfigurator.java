@@ -5,17 +5,17 @@ public class AnnotationScannerConfigurator implements Configurator<AnnotationSca
 	@Override
 	public AnnotationScannerConfig createConfiguration(Object requirement) {
 		if (requirement == DummyRequirement1.class)
-			return new AnnotationScannerConfig(1);
+			return new AnnotationScannerConfig(1, 1);
 		if (requirement == DummyRequirement2.class)
-			return new AnnotationScannerConfig(2);
+			return new AnnotationScannerConfig(2, 1);
 		return null;
 	}
 
 	@Override
 	public AnnotationScannerConfig merge(AnnotationScannerConfig config1, AnnotationScannerConfig config2) {
 		if (config1.what == config2.what)
-			return config1;
+			return new AnnotationScannerConfig(config1.what, config1.many + config2.many);
 		else
-			return new AnnotationScannerConfig(config1.what + config2.what);
+			return null;
 	}
 }

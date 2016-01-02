@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -162,31 +163,27 @@ public class TMain {
 		private Set<Object> openRequirements = new HashSet<>();
 		private final Set<Object> resolvedRequirements = new HashSet<>();
 
-		<A, C extends AnalyserConfiguration<A>> C find(AnalyserMetadata<A, C> c) {
-			for (AnalyserConfiguration<?> a : anas) {
-				if (analysersMetadata.get(a) == c)
-					return (C) a;
-			}
-			return null;
-		}
-
 		<A, C extends AnalyserConfiguration<A>> void do1(C c) {
 			AnalyserMetadata<A, C> metadata = analysersMetadata.get(c);
 
 			System.err.println(c + " -> " + metadata);
 			if (metadata.configurator != null) {
 
-				C old = find(metadata);
-				if (old != null) {
-					C merged = metadata.configurator.merge(old, c);
+				for (Iterator<AnalyserConfiguration<?>> ia = anas.iterator(); ia.hasNext();) {
+					AnalyserConfiguration<?> a = ia.next();
+					if (analysersMetadata.get(a) != metadata)
+						continue;
 
-					if (merged != null) {
-						if (merged == old)
-							return;
+					C merged = metadata.configurator.merge((C) a, c);
+					if (merged == null)
+						continue;
 
-						c = merged;
-						anas.remove(old);
-					}
+					if (merged == a)
+						return;
+
+					c = merged;
+					ia.remove();
+					break;
 				}
 
 				for (Object o : metadata.configurator.getRequirements(c)) {
@@ -208,7 +205,8 @@ public class TMain {
 					if (!resolvedRequirements.add(o))
 						continue;
 
-					int done = 0;
+					Set<Configurator<?, ?>> configurators = new HashSet<>();
+
 					for (AnalyserMetadata<?, ?> c : analysersMetadata) {
 						if (c.configurator == null)
 							continue;
@@ -217,19 +215,25 @@ public class TMain {
 						if (config == null)
 							continue;
 
-						System.err.println("solving requirement " + o + " with " + config);
+						System.err.println("Solving requirement " + o + " with " + config);
 						do1(config);
 
-						++done;
+						configurators.add(c.configurator);
 					}
 
-					if (done == 0)
+					switch (configurators.size()) {
+					case 0:
 						throw new Error("Unresolved requirement: " + o);
-					else if (done != 1)
-						throw new Error("failed resolution of " + o + ": " + done);
+					case 1:
+						break;
+					default:
+
+						throw new Error("Ambigous requirement: " + o + ", " + configurators);
+					}
 				}
 			}
 		}
+
 	}
 
 	public void doit2(AnalysisConfiguration config) {

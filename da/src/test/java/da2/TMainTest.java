@@ -27,6 +27,9 @@ public class TMainTest {
 
 		config = config.with(AnalyserConfiguration.of(JpaAnalysis2.class));
 		TMain.run(config);
+		config = config.with(AnalyserConfiguration.of(JpaAnalysis.class));
+		config = config.with(AnalyserConfiguration.of(JpaAnalysis2.class));
+		TMain.run(config);
 	}
 
 }
