@@ -24,6 +24,7 @@ import com.github.da.Configuration;
 import com.github.da.ConfigurationExtension;
 import com.github.da.Ext;
 import com.github.da.Ext.AnalyserConfigurationBean;
+import com.github.da.Ext.AnalyserListBean;
 import com.github.da.Ext.AnalyserListConfigurationBean;
 import com.github.da.Ext.CC1;
 import com.github.da.Ext.ConfigurationBean;
@@ -145,6 +146,11 @@ public class TMain {
 						cc1.bind(bean, value);
 					}
 
+					@Override
+					public <T> void visit(AnalyserListBean<T> bean) {
+						cc1.bind(bean, create(anas, bean.getTargetClass()));
+					}
+
 				});
 			}
 
@@ -156,6 +162,7 @@ public class TMain {
 
 	@Inject
 	AnalysersMetadata analysersMetadata;
+	private List<AnalyserConfiguration<?>> anas;
 
 	class Resolver {
 		private List<AnalyserConfiguration<?>> anas = new LinkedList<>();
@@ -227,7 +234,6 @@ public class TMain {
 					case 1:
 						break;
 					default:
-
 						throw new Error("Ambigous requirement: " + o + ", " + configurators);
 					}
 				}
@@ -250,8 +256,10 @@ public class TMain {
 			System.err.println("FINAL " + o);
 		}
 
+		this.anas = r.anas;
+
 		System.err.println("START");
-		for (RootAnalysis rootAnaylsis : create(r.anas, RootAnalysis.class)) {
+		for (RootAnalysis rootAnaylsis : create(anas, RootAnalysis.class)) {
 			rootAnaylsis.run();
 		}
 		System.err.println("END");

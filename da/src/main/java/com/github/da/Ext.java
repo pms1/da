@@ -38,6 +38,7 @@ import javax.enterprise.util.AnnotationLiteral;
 import javax.inject.Inject;
 import javax.inject.Qualifier;
 
+import com.github.da.t.All;
 import com.github.da.t.AnalyserConfiguration;
 import com.github.da.t.Configured;
 import com.google.common.base.Preconditions;
@@ -194,6 +195,42 @@ public class Ext implements Extension {
 		}
 	}
 
+	public class CC2 implements AlterableContext {
+
+		@Override
+		public Class<? extends Annotation> getScope() {
+			return com.github.da.t.Analysis.class;
+		}
+
+		@Override
+		public <T> T get(Contextual<T> contextual, CreationalContext<T> creationalContext) {
+			if (!isActive())
+				throw new ContextNotActiveException();
+
+			System.err.println("CC2 CREATE " + contextual);
+			return contextual.create(creationalContext);
+		}
+
+		@Override
+		public <T> T get(Contextual<T> contextual) {
+			if (!isActive())
+				throw new ContextNotActiveException();
+
+			return null;
+		}
+
+		@Override
+		public boolean isActive() {
+			return true;
+		}
+
+		@Override
+		public void destroy(Contextual<?> contextual) {
+			// TODO Auto-generated method stub
+			throw new Error();
+		}
+	}
+
 	public class CC implements Context {
 
 		@Override
@@ -262,6 +299,7 @@ public class Ext implements Extension {
 
 	private CC cc;
 	private CC1 cc1;
+	private CC2 cc2;
 
 	CC getCC() {
 		return cc;
@@ -326,7 +364,85 @@ public class Ext implements Extension {
 	private static final Annotation defaultLiteratal = new AnnotationLiteral<Default>() {
 	};
 
+	private static final Annotation allLiteral = new AnnotationLiteral<All>() {
+	};
+
 	private <X> void vetoOurScopeTypes(@Observes ProcessAnnotatedType<X> pat) {
+		if (pat.getAnnotatedType().isAnnotationPresent(com.github.da.t.Analysis.class)) {
+			Class elementType = (Class) pat.getAnnotatedType().getBaseType();
+			Type listType = listOf(TypeToken.of(elementType)).getType();
+
+			System.err.println("TYPE " + listType);
+			configurationBeans.add(new AnalyserListBean<Object>() {
+
+				@Override
+				public Class<?> getBeanClass() {
+					return List.class;
+				}
+
+				@Override
+				public Set<InjectionPoint> getInjectionPoints() {
+					return Collections.emptySet();
+				}
+
+				@Override
+				public boolean isNullable() {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public Object create(CreationalContext<Object> creationalContext) {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public void destroy(Object instance, CreationalContext<Object> creationalContext) {
+					throw new UnsupportedOperationException();
+				}
+
+				@Override
+				public Set<Type> getTypes() {
+					return Sets.newHashSet(listType, Object.class);
+				}
+
+				@Override
+				public Set<Annotation> getQualifiers() {
+					return Sets.newHashSet(defaultLiteratal, allLiteral);
+				}
+
+				@Override
+				public Class<? extends Annotation> getScope() {
+					return Configuration.class;
+				}
+
+				@Override
+				public String getName() {
+					return null;
+				}
+
+				@Override
+				public Set<Class<? extends Annotation>> getStereotypes() {
+					return Collections.emptySet();
+				}
+
+				@Override
+				public boolean isAlternative() {
+					return false;
+				}
+
+				@Override
+				public void accept(ConfigurationBeanVisitor visitor) {
+					visitor.visit(this);
+				}
+
+				@Override
+				public Class<?> getTargetClass() {
+					return elementType;
+				}
+
+			});
+		}
+
 		if (pat.getAnnotatedType().isAnnotationPresent(Configuration.class)) {
 			pat.veto();
 
@@ -725,6 +841,8 @@ public class Ext implements Extension {
 	private void addOurScopeBeans(@Observes AfterBeanDiscovery abd) {
 		abd.addContext(cc = new CC());
 		abd.addContext(cc1 = new CC1());
+		if (false)
+			abd.addContext(cc2 = new CC2());
 
 		for (AnnotatedType<?> t : typesAnaScope) {
 			Bean<?> b = createBean(AnaScope.class, t);
@@ -743,10 +861,16 @@ public class Ext implements Extension {
 		<T> void visit(AnalyserListConfigurationBean<T> bean);
 
 		<T> void visit(AnalyserConfigurationBean<T> bean);
+
+		<T> void visit(AnalyserListBean<T> bean);
 	}
 
 	public static interface ConfigurationBean<T> extends Bean<T> {
 		void accept(ConfigurationBeanVisitor visitor);
+	}
+
+	public static interface AnalyserListBean<T> extends ConfigurationBean<T> {
+		Class<?> getTargetClass();
 	}
 
 	public static interface ConfigurationConfigurationBean<T> extends ConfigurationBean<T> {

@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import com.github.da.t.AnalyserConfiguration;
 import com.github.da.t.AnalysisConfiguration;
+import com.github.da.t.ClassResourceProcessor;
 import com.github.da.t.JpaAnalysis;
 import com.github.da.t.JpaAnalysis2;
 import com.github.da.t.RootAnalysis1Config;
@@ -42,5 +43,10 @@ public class TMainTest {
 		config = config.with(new RootAnalysis1Config(Paths.get("foo")));
 
 		TMain.run(config);
+
+		config = config.with(AnalyserConfiguration.of(ClassResourceProcessor.class));
+
+		TMain.run(config);
+
 	}
 }
