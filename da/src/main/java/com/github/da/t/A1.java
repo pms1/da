@@ -4,7 +4,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-public class A1 implements A {
+public class A1 {
 	@Inject
 	C1 c1;
 

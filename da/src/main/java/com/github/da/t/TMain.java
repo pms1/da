@@ -122,7 +122,7 @@ public class TMain {
 
 								Class<?> c;
 								if (dconfig2 instanceof AnalyserConfiguration) {
-									c = ((AnalyserConfiguration<?>) dconfig2).c;
+									c = ((AnalyserConfiguration<?>) dconfig2).getAnalyser();
 									if (!bean.getTargetClass().isAssignableFrom(c))
 										throw new Error();
 								} else {

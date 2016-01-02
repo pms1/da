@@ -4,7 +4,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-public class A2 implements A {
+public class A2 {
 	@Inject
 	A2Config config;
 

@@ -2,7 +2,7 @@ package com.github.da.t;
 
 import javax.inject.Inject;
 
-public class A31 implements A {
+public class A31 {
 	@Inject
 	@Configured
 	A41 a41;

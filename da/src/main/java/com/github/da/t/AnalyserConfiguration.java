@@ -1,13 +1,17 @@
 package com.github.da.t;
 
-public class AnalyserConfiguration<T> {
-	final Class<? extends T> c;
+public class AnalyserConfiguration<A> {
+	private final Class<A> analyser;
 
-	AnalyserConfiguration(Class<? extends T> c) {
-		this.c = c;
+	public Class<A> getAnalyser() {
+		return analyser;
 	}
 
-	public static <T> AnalyserConfiguration<T> of(Class<T> class1) {
-		return new AnalyserConfiguration<T>(class1);
+	AnalyserConfiguration(Class<A> c) {
+		this.analyser = c;
+	}
+
+	public static <A> AnalyserConfiguration<A> of(Class<A> class1) {
+		return new AnalyserConfiguration<>(class1);
 	}
 }
