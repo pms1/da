@@ -4,18 +4,17 @@ import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Arrays;
 
 public class TypeUtils {
 	public static <T> Type resolve(Type t, TypeVariable<Class<T>> typeVariable) {
 		return TypeVisitor.accept(t, new TypeVisitor<Type>() {
 			@Override
-			public <T> Type visit(Class<T> v) {
+			public <T1> Type visit(Class<T1> v) {
 				return resolveInternal(v, typeVariable, v.getTypeParameters());
 			}
 
 			@Override
-			public <T> Type visit(ParameterizedType v) {
+			public Type visit(ParameterizedType v) {
 				return resolveInternal(v, typeVariable, new Type[0]);
 			}
 		});
@@ -24,8 +23,6 @@ public class TypeUtils {
 	private static <T> Type resolveInternal(Type t, TypeVariable<Class<T>> typeVariable, Type[] assignments) {
 		if (t == null)
 			return null;
-
-		System.err.println("@ " + t.getTypeName() + " -- " + Arrays.toString(assignments));
 
 		if (t == typeVariable.getGenericDeclaration()) {
 
@@ -45,18 +42,12 @@ public class TypeUtils {
 
 				return TypeVisitor.accept(parent, new TypeVisitor<Type>() {
 
-					public <T> Type visit(Class<T> v) {
+					public <T1> Type visit(Class<T1> v) {
 						return resolve(v, typeVariable);
 					};
 
 					@Override
-					public <T> Type visit(ParameterizedType v1) {
-						System.err.println("V " + parent);
-						for (TypeVariable p : v.getTypeParameters())
-							System.err.println("P " + p);
-
-						System.err.println("V1 " + v1);
-
+					public Type visit(ParameterizedType v1) {
 						Type[] resolved = new Type[v1.getActualTypeArguments().length];
 						for (int i = v1.getActualTypeArguments().length; i-- > 0;) {
 							Type t = v1.getActualTypeArguments()[i];
@@ -73,13 +64,16 @@ public class TypeUtils {
 								}
 
 								@Override
-								public <T> Type visit(Class<T> v) {
+								public <T1> Type visit(Class<T1> v) {
+									return v;
+								}
+
+								@Override
+								public Type visit(ParameterizedType v) {
 									return v;
 								}
 
 							});
-
-							System.err.println("T " + t + " " + resolved[i]);
 						}
 
 						return resolveInternal(v1.getRawType(), typeVariable, resolved);
@@ -109,6 +103,20 @@ public class TypeUtils {
 			@Override
 			public Type visit(ParameterizedType v) {
 				return resolveInternal(v.getRawType(), typeVariable, v.getActualTypeArguments());
+			}
+		});
+	}
+
+	public static Type getRawType(Type resolve) {
+		return TypeVisitor.accept(resolve, new TypeVisitor<Class<?>>() {
+			@Override
+			public <T> Class<?> visit(Class<T> v) {
+				return v;
+			}
+
+			@Override
+			public Class<?> visit(ParameterizedType v) {
+				return (Class<?>) v.getRawType();
 			}
 		});
 	}

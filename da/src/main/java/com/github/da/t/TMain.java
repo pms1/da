@@ -4,8 +4,10 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AnnotatedField;
@@ -16,7 +18,6 @@ import javax.inject.Inject;
 
 import org.jboss.weld.injection.FieldInjectionPoint;
 
-import com.github.da.AnalysisConfiguration;
 import com.github.da.Collectors2;
 import com.github.da.Configuration;
 import com.github.da.ConfigurationExtension;
@@ -36,7 +37,7 @@ public class TMain {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 		Stopwatch sw = Stopwatch.createStarted();
 		try (Application a = new ApplicationBuilder() //
-				.with(new ConfigurationExtension(config))//
+				.with(new ConfigurationExtension(new com.github.da.AnalysisConfiguration()))//
 				.with(new Ext())//
 				.build()) {
 			a.get(TMain.class).doit2(config);
@@ -152,50 +153,144 @@ public class TMain {
 		}
 	}
 
-	private void doit2(AnalysisConfiguration config) {
+	@Inject
+	AnalysersMetadata analysersMetadata;
+
+	class Resolver {
+		private List<AnalyserConfiguration<?>> anas = new LinkedList<>();
+
+		private Set<Object> openRequirements = new HashSet<>();
+		private final Set<Object> resolvedRequirements = new HashSet<>();
+
+		<A, C extends AnalyserConfiguration<A>> C find(AnalyserMetadata<A, C> c) {
+			for (AnalyserConfiguration<?> a : anas) {
+				if (analysersMetadata.get(a) == c)
+					return (C) a;
+			}
+			return null;
+		}
+
+		<A, C extends AnalyserConfiguration<A>> void do1(C c) {
+			AnalyserMetadata<A, C> metadata = analysersMetadata.get(c);
+
+			System.err.println(c + " -> " + metadata);
+			if (metadata.configurator != null) {
+
+				C old = find(metadata);
+				if (old != null) {
+					C merged = metadata.configurator.merge(old, c);
+
+					if (merged != null) {
+						if (merged == old)
+							return;
+
+						c = merged;
+						anas.remove(old);
+					}
+				}
+
+				for (Object o : metadata.configurator.getRequirements(c)) {
+					System.err.println("REQ " + o);
+					openRequirements.add(o);
+				}
+			}
+
+			anas.add(c);
+
+		}
+
+		void finish() {
+			while (!openRequirements.isEmpty()) {
+				Set<Object> reqs = openRequirements;
+				openRequirements = new HashSet<>();
+
+				for (Object o : reqs) {
+					if (!resolvedRequirements.add(o))
+						continue;
+
+					int done = 0;
+					for (AnalyserMetadata<?, ?> c : analysersMetadata) {
+						if (c.configurator == null)
+							continue;
+
+						AnalyserConfiguration<?> config = c.configurator.createConfiguration(o);
+						if (config == null)
+							continue;
+
+						System.err.println("solving requirement " + o + " with " + config);
+						do1(config);
+
+						++done;
+					}
+
+					if (done == 0)
+						throw new Error("Unresolved requirement: " + o);
+					else if (done != 1)
+						throw new Error("failed resolution of " + o + ": " + done);
+				}
+			}
+		}
+	}
+
+	public void doit2(AnalysisConfiguration config) {
+
+		System.err.println(analysersMetadata.toString());
+
+		Resolver r = new Resolver();
+		for (AnalyserConfiguration<?> c : config.configs)
+			r.do1(c);
+
+		r.finish();
+
+		for (Object o : r.anas) {
+			System.err.println("FINAL " + o);
+		}
 		// cc1.activate();
 		// cc1.bind(C1.class, new C1());
 		// cc1.bind(C2.class, new C2());
 		// A a = i.select(A1.class).get();
 
-		{
-			A2 a2 = instantiate(A2.class, new A2Config());
-			System.err.println("A2=" + a2);
+		if (false) {
+			{
+				A2 a2 = instantiate(A2.class, new A2Config());
+				System.err.println("A2=" + a2);
+			}
+
+			{
+				C2 c2 = new C2();
+				c2.a2 = Arrays.asList(new A2Config(), new A2Config());
+				A1 a1 = instantiate(A1.class, new C1(), c2);
+				System.err.println("A1=" + a1);
+			}
+
+			{
+				A1 a1 = instantiate(A1.class, new C1(), new C2());
+				System.err.println("A1=" + a1);
+			}
+
+			{
+				A3 a3 = instantiate(A3.class);
+				System.err.println("A3=" + a3);
+			}
+
+			{
+				A31Config a31c = new A31Config();
+				a31c.a41c = new A41Config();
+				A31 a31 = instantiate(A31.class, a31c);
+				System.err.println("A3=" + a31);
+			}
+
+			{
+				TypeMappersConfig c = new TypeMappersConfig();
+				c = c.withTypeMapper(AnalyserConfiguration.of(TM1.class));
+				c = c.withTypeMapper(new TM2Config());
+				TMUserConfig tmUserConfig = new TMUserConfig();
+				tmUserConfig.tmConfig = c;
+				TMUser user = instantiate(TMUser.class, tmUserConfig);
+				System.err.println("U " + asString(user));
+			}
 		}
 
-		{
-			C2 c2 = new C2();
-			c2.a2 = Arrays.asList(new A2Config(), new A2Config());
-			A1 a1 = instantiate(A1.class, new C1(), c2);
-			System.err.println("A1=" + a1);
-		}
-
-		{
-			A1 a1 = instantiate(A1.class, new C1(), new C2());
-			System.err.println("A1=" + a1);
-		}
-
-		{
-			A3 a3 = instantiate(A3.class);
-			System.err.println("A3=" + a3);
-		}
-
-		{
-			A31Config a31c = new A31Config();
-			a31c.a41c = new A41Config();
-			A31 a31 = instantiate(A31.class, a31c);
-			System.err.println("A3=" + a31);
-		}
-
-		{
-			TypeMappersConfig c = new TypeMappersConfig();
-			c = c.withTypeMapper(AnalyserConfiguration.of(TM1.class));
-			c = c.withTypeMapper(new TM2Config());
-			TMUserConfig tmUserConfig = new TMUserConfig();
-			tmUserConfig.tmConfig = c;
-			TMUser user = instantiate(TMUser.class, tmUserConfig);
-			System.err.println("U " + asString(user));
-		}
 		System.err.println("\ndone\n");
 	}
 
@@ -255,6 +350,20 @@ public class TMain {
 		if (!first)
 			s += ")";
 		return s;
+
+	}
+
+	public static void run(com.github.da.t.AnalysisConfiguration config) {
+		Stopwatch sw = Stopwatch.createStarted();
+		try (Application a = new ApplicationBuilder() //
+				.with(new ConfigurationExtension(new com.github.da.AnalysisConfiguration()))//
+				.with(new Ext())//
+				.build()) {
+			a.get(TMain.class).doit2(config);
+		} finally {
+			sw.stop();
+			System.err.println("Anlysis done in " + sw);
+		}
 
 	}
 }

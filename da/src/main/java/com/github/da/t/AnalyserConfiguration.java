@@ -14,4 +14,9 @@ public class AnalyserConfiguration<A> {
 	public static <A> AnalyserConfiguration<A> of(Class<A> class1) {
 		return new AnalyserConfiguration<>(class1);
 	}
+
+	@Override
+	public String toString() {
+		return super.toString() + "(analyser=" + analyser + ")";
+	}
 }

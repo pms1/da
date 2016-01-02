@@ -24,7 +24,7 @@ public interface TypeVisitor<R> {
 		return visit((Type) v);
 	}
 
-	default <T> R visit(ParameterizedType v) {
+	default R visit(ParameterizedType v) {
 		return visit((Type) v);
 	}
 

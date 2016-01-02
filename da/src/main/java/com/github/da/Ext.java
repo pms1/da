@@ -100,7 +100,7 @@ public class Ext implements Extension {
 		}
 
 		@Override
-		public <T> Void visit(ParameterizedType v) {
+		public Void visit(ParameterizedType v) {
 			System.out.println(prefix + "ParameterizedType " + v.getTypeName());
 			pushPrefix("  ");
 
@@ -350,7 +350,8 @@ public class Ext implements Extension {
 								qualifiers, pat.getAnnotatedType().getJavaClass(), f, analysisType.getRawType()));
 					} else if (TypeToken.of(AnalyserConfiguration.class).isAssignableFrom(type)) {
 						Type configType = TypeUtils.resolve(f.getBaseType(), List.class.getTypeParameters()[0]);
-						Type analysisType = TypeUtils.resolve(configType, AnalyserConfiguration.class.getTypeParameters()[0]);
+						Type analysisType = TypeUtils.resolve(configType,
+								AnalyserConfiguration.class.getTypeParameters()[0]);
 
 						analysisType = TypeVisitor.accept(analysisType, new TypeVisitor<Type>() {
 							@Override
