@@ -6,7 +6,9 @@ import org.junit.Test;
 
 import com.github.da.t.AnalyserConfiguration;
 import com.github.da.t.AnalysisConfiguration;
+import com.github.da.t.AnnotationScannerConfig;
 import com.github.da.t.ClassResourceProcessor;
+import com.github.da.t.JarResourceProcessor;
 import com.github.da.t.JpaAnalysis;
 import com.github.da.t.JpaAnalysis2;
 import com.github.da.t.RootAnalysis1Config;
@@ -45,6 +47,8 @@ public class TMainTest {
 		TMain.run(config);
 
 		config = config.with(AnalyserConfiguration.of(ClassResourceProcessor.class));
+		config = config.with(AnalyserConfiguration.of(JarResourceProcessor.class));
+		config = config.with(new AnnotationScannerConfig(3, 1));
 
 		TMain.run(config);
 

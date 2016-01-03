@@ -34,6 +34,8 @@ import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
 import com.google.common.base.Stopwatch;
 
+import utils.text.Description;
+
 public class TMain {
 	public static void main(String[] args) {
 		AnalysisConfiguration config = new AnalysisConfiguration();
@@ -260,6 +262,7 @@ public class TMain {
 
 		System.err.println("START");
 		for (RootAnalysis rootAnaylsis : create(anas, RootAnalysis.class)) {
+			System.err.println(new Description().describe(rootAnaylsis));
 			rootAnaylsis.run();
 		}
 		System.err.println("END");

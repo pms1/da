@@ -1,5 +1,10 @@
 package com.github.da.t;
 
+import java.util.Arrays;
+import java.util.Collection;
+
+import com.github.da.ClassData;
+
 public class AnnotationScannerConfigurator implements Configurator<AnnotationScanner, AnnotationScannerConfig> {
 
 	@Override
@@ -9,6 +14,11 @@ public class AnnotationScannerConfigurator implements Configurator<AnnotationSca
 		if (requirement == DummyRequirement2.class)
 			return new AnnotationScannerConfig(2, 1);
 		return null;
+	}
+
+	@Override
+	public Collection<Object> getRequirements(AnnotationScannerConfig config) {
+		return Arrays.asList(ClassData.class);
 	}
 
 	@Override
