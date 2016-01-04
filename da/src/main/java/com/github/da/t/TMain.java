@@ -10,7 +10,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.enterprise.inject.Instance;
@@ -63,11 +65,38 @@ public class TMain {
 	private @Inject Ext ext;
 	private @Inject BeanManager bm;
 
+	private <T> void traverse(AnalyserConfiguration<?> a, Consumer<AnalyserConfiguration<?>> consumer) {
+		Bean<T> bean = (Bean<T>) bm.resolve(bm.getBeans(a.getAnalyser()));
+
+		consumer.accept(a);
+
+		for (ConfigurationBean<?> dep : ext.getDependencies(bean)) {
+			dep.accept(new ConfigurationBeanVisitor() {
+
+				@Override
+				public <T1> void visit(ConfigurationConfigurationBean<T1> bean) {
+				}
+
+				@Override
+				public <T1> void visit(AnalyserConfigurationBean<T1> bean) {
+				}
+
+				@Override
+				public <T1> void visit(AnalyserListConfigurationBean<T1> bean) {
+				}
+
+				@Override
+				public <T1> void visit(AnalyserListBean<T1> bean) {
+					anas.stream().filter((a) -> bean.getTargetClass().isAssignableFrom(a.getAnalyser()))
+							.forEach(consumer);
+				}
+			});
+		}
+	}
+
 	<T> T instantiate(Class<T> clazz, Object... configs) {
 
 		Bean<T> bean = (Bean<T>) bm.resolve(bm.getBeans(clazz));
-
-		System.err.println("BEAN " + bean);
 
 		Collection<ConfigurationBean<?>> deps = ext.getDependencies(bean);
 
@@ -75,8 +104,6 @@ public class TMain {
 			cc1.activate();
 
 			for (ConfigurationBean<?> dep : deps) {
-				System.err.println("DEP " + dep);
-
 				dep.accept(new ConfigurationBeanVisitor() {
 
 					@Override
@@ -90,11 +117,14 @@ public class TMain {
 
 					@Override
 					public <T1> void visit(AnalyserConfigurationBean<T1> bean) {
-						System.err.println("CONFIG CLASS " + bean.getConfigurationClass());
-
-						Object config = Arrays.stream(configs)
-								.filter((c) -> c.getClass().equals(bean.getConfigurationClass()))
-								.collect(Collectors2.findOnly());
+						Object config;
+						try {
+							config = Arrays.stream(configs)
+									.filter((c) -> c.getClass().equals(bean.getConfigurationClass()))
+									.collect(Collectors2.findOnly());
+						} catch (NoSuchElementException e) {
+							throw new Error("Missing configuration of type " + bean.getConfigurationClass());
+						}
 
 						System.err.println("CONFIG " + config);
 
@@ -113,13 +143,9 @@ public class TMain {
 
 					@Override
 					public <T1> void visit(AnalyserListConfigurationBean<T1> bean) {
-						System.err.println("CONFIG CLASS " + bean.getConfigurationClass());
-
 						Object config = Arrays.stream(configs)
 								.filter((c) -> c.getClass().equals(bean.getConfigurationClass()))
 								.collect(Collectors2.findOnly());
-
-						System.err.println("CONFIG " + config);
 
 						List<?> dconfig = bean.extract(config);
 
@@ -128,8 +154,6 @@ public class TMain {
 						if (dconfig != null) {
 							value = new LinkedList<>();
 							for (Object dconfig2 : dconfig) {
-								System.err.println("NEXT CONFIG " + dconfig2);
-
 								Class<?> c;
 								if (dconfig2 instanceof AnalyserConfiguration) {
 									c = ((AnalyserConfiguration<?>) dconfig2).getAnalyser();
@@ -282,15 +306,26 @@ public class TMain {
 					if (requirements.get(a).stream().allMatch(req -> resolved.contains(req))) {
 						ia.remove();
 						result.add(a);
-						requirementResolution.entrySet().forEach((e) -> {
-							if (e.getValue() == a)
-								resolved.add(e.getKey());
+
+						traverse(a, (c) -> {
+							if (!anas.contains(c))
+								throw new Error();
+
+							requirementResolution.entrySet().forEach((e) -> {
+								if (e.getValue() == c)
+									resolved.add(e.getKey());
+							});
+
 						});
 					}
 				}
 
 				if (oldSize == todo.size()) {
-					throw new Error();
+					for (AnalyserConfiguration<?> a : todo) {
+						requirements.get(a).stream().filter(req -> !resolved.contains(req))
+								.forEach((r) -> System.err.println("UNRESOLVED " + a + " - " + r));
+					}
+					throw new Error("Unresolved dependencies");
 				}
 			}
 
@@ -323,8 +358,9 @@ public class TMain {
 		r.requirementResolution.entrySet().stream().forEach(System.err::println);
 
 		System.err.println("START");
-		for (RootAnalysis rootAnaylsis : create(anas, RootAnalysis.class)) {
-			System.err.println(new Description().describe(rootAnaylsis));
+		for (AnalyserConfiguration<RootAnalysis> a : create2(anas, RootAnalysis.class)) {
+			RootAnalysis rootAnaylsis = instantiate(a.getAnalyser(), a);
+			System.err.print(new Description().describe(rootAnaylsis));
 			rootAnaylsis.run();
 		}
 		System.err.println("END");
@@ -335,31 +371,31 @@ public class TMain {
 
 		if (false) {
 			{
-				A2 a2 = instantiate(A2.class, new A2Config());
+				A2 a2 = instantiate(A2.class, null, new A2Config());
 				System.err.println("A2=" + a2);
 			}
 
 			{
 				C2 c2 = new C2();
 				c2.a2 = Arrays.asList(new A2Config(), new A2Config());
-				A1 a1 = instantiate(A1.class, new C1(), c2);
+				A1 a1 = instantiate(A1.class, null, new C1(), c2);
 				System.err.println("A1=" + a1);
 			}
 
 			{
-				A1 a1 = instantiate(A1.class, new C1(), new C2());
+				A1 a1 = instantiate(A1.class, null, new C1(), new C2());
 				System.err.println("A1=" + a1);
 			}
 
 			{
-				A3 a3 = instantiate(A3.class);
+				A3 a3 = instantiate(A3.class, null);
 				System.err.println("A3=" + a3);
 			}
 
 			{
 				A31Config a31c = new A31Config();
 				a31c.a41c = new A41Config();
-				A31 a31 = instantiate(A31.class, a31c);
+				A31 a31 = instantiate(A31.class, null, a31c);
 				System.err.println("A3=" + a31);
 			}
 
@@ -369,7 +405,7 @@ public class TMain {
 				c = c.withTypeMapper(new TM2Config());
 				TMUserConfig tmUserConfig = new TMUserConfig();
 				tmUserConfig.tmConfig = c;
-				TMUser user = instantiate(TMUser.class, tmUserConfig);
+				TMUser user = instantiate(TMUser.class, null, tmUserConfig);
 				System.err.println("U " + asString(user));
 			}
 		}
@@ -378,11 +414,15 @@ public class TMain {
 	}
 
 	private <T> List<T> create(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
+		return create2(anas, class1).stream().map(a -> instantiate(a.getAnalyser().asSubclass(class1), a))
+				.collect(Collectors.toList());
+	}
+
+	private <T> List<AnalyserConfiguration<T>> create2(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
 		List<AnalyserConfiguration<?>> filtered = anas.stream().filter((a) -> class1.isAssignableFrom(a.getAnalyser()))
 				.collect(Collectors.toList());
 
-		return r.sort(filtered).stream().map(a -> instantiate(a.getAnalyser().asSubclass(class1), a))
-				.collect(Collectors.toList());
+		return (List) r.sort(filtered);
 	}
 
 	static class TMUser {

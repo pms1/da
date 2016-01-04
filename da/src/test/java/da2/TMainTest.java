@@ -13,6 +13,8 @@ import com.github.da.t.JpaAnalysis;
 import com.github.da.t.JpaAnalysis2;
 import com.github.da.t.JpaAnalysis3;
 import com.github.da.t.RootAnalysis1Config;
+import com.github.da.t.RootAnalysis2Config;
+import com.github.da.t.RootAnalysis3;
 import com.github.da.t.TMain;
 
 public class TMainTest {
@@ -54,6 +56,15 @@ public class TMainTest {
 		config = config.with(new AnnotationScannerConfig(3, 1));
 
 		TMain.run(config);
+	}
 
+	@Test
+	public void t3() {
+		AnalysisConfiguration config = new AnalysisConfiguration();
+
+		config = config.with(AnalyserConfiguration.of(RootAnalysis3.class));
+		config = config.with(new RootAnalysis2Config());
+
+		TMain.run(config);
 	}
 }
