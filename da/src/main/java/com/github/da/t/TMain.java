@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AnnotatedField;
@@ -265,13 +266,46 @@ public class TMain {
 			}
 		}
 
+		List<AnalyserConfiguration<?>> sort(List<AnalyserConfiguration<?>> todo) {
+			todo = new LinkedList<>(todo);
+
+			Set<Object> resolved = new HashSet<>();
+
+			LinkedList<AnalyserConfiguration<?>> result = new LinkedList<>();
+
+			while (!todo.isEmpty()) {
+				int oldSize = todo.size();
+
+				for (Iterator<AnalyserConfiguration<?>> ia = todo.iterator(); ia.hasNext();) {
+					AnalyserConfiguration<?> a = ia.next();
+
+					if (requirements.get(a).stream().allMatch(req -> resolved.contains(req))) {
+						ia.remove();
+						result.add(a);
+						requirementResolution.entrySet().forEach((e) -> {
+							if (e.getValue() == a)
+								resolved.add(e.getKey());
+						});
+					}
+				}
+
+				if (oldSize == todo.size()) {
+					throw new Error();
+				}
+			}
+
+			return result;
+		}
+
 	}
+
+	Resolver r;
 
 	public void doit2(AnalysisConfiguration config) {
 
 		System.err.println(analysersMetadata.toString());
 
-		Resolver r = new Resolver();
+		r = new Resolver();
 		for (AnalyserConfiguration<?> c : config.configs)
 			r.addAnalyserConfiguration(c);
 
@@ -344,16 +378,11 @@ public class TMain {
 	}
 
 	private <T> List<T> create(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
-		List<T> instances = new LinkedList<>();
+		List<AnalyserConfiguration<?>> filtered = anas.stream().filter((a) -> class1.isAssignableFrom(a.getAnalyser()))
+				.collect(Collectors.toList());
 
-		for (AnalyserConfiguration<?> a : anas) {
-			System.err.println("C " + class1 + " " + a.getAnalyser());
-			if (class1.isAssignableFrom(a.getAnalyser())) {
-				instances.add(instantiate(a.getAnalyser().asSubclass(class1), a));
-			}
-		}
-
-		return instances;
+		return r.sort(filtered).stream().map(a -> instantiate(a.getAnalyser().asSubclass(class1), a))
+				.collect(Collectors.toList());
 	}
 
 	static class TMUser {
