@@ -4,10 +4,12 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.inject.Instance;
@@ -33,6 +35,8 @@ import com.github.da.Ext.ConfigurationConfigurationBean;
 import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
 import com.google.common.base.Stopwatch;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 
 import utils.text.Description;
 
@@ -149,7 +153,7 @@ public class TMain {
 					}
 
 					@Override
-					public <T> void visit(AnalyserListBean<T> bean) {
+					public <T1> void visit(AnalyserListBean<T1> bean) {
 						cc1.bind(bean, create(anas, bean.getTargetClass()));
 					}
 
@@ -167,12 +171,15 @@ public class TMain {
 	private List<AnalyserConfiguration<?>> anas;
 
 	class Resolver {
-		private List<AnalyserConfiguration<?>> anas = new LinkedList<>();
+		private final List<AnalyserConfiguration<?>> anas = new LinkedList<>();
 
 		private Set<Object> openRequirements = new HashSet<>();
 		private final Set<Object> resolvedRequirements = new HashSet<>();
 
-		<A, C extends AnalyserConfiguration<A>> void do1(C c) {
+		private final Multimap<AnalyserConfiguration<?>, Object> config2req = HashMultimap.create();
+		private final Map<Object, AnalyserConfiguration<?>> resolved = new HashMap<>();
+
+		<A, C extends AnalyserConfiguration<A>> C addAnalyserConfiguration(C c) {
 			AnalyserMetadata<A, C> metadata = analysersMetadata.get(c);
 
 			System.err.println(c + " -> " + metadata);
@@ -183,35 +190,40 @@ public class TMain {
 					if (analysersMetadata.get(a) != metadata)
 						continue;
 
-					C merged = metadata.configurator.merge((C) a, c);
+					C merged = metadata.configurator.merge(metadata.configClass.cast(a), c);
 					if (merged == null)
 						continue;
 
 					if (merged == a)
-						return;
+						return merged;
 
+					// replace configuration to add by merged configuration
 					c = merged;
 					ia.remove();
+					config2req.removeAll(a);
+					C c1 = c;
+					resolved.replaceAll((k, v) -> v == a ? c1 : v);
 					break;
 				}
 
-				for (Object o : metadata.configurator.getRequirements(c)) {
-					System.err.println("REQ " + o);
-					openRequirements.add(o);
+				for (Object requirement : metadata.configurator.getRequirements(c)) {
+					openRequirements.add(requirement);
+					config2req.put(c, requirement);
 				}
 			}
 
 			anas.add(c);
 
+			return c;
 		}
 
 		void finish() {
 			while (!openRequirements.isEmpty()) {
-				Set<Object> reqs = openRequirements;
+				Set<Object> todo = openRequirements;
 				openRequirements = new HashSet<>();
 
-				for (Object o : reqs) {
-					if (!resolvedRequirements.add(o))
+				for (Object req : todo) {
+					if (!resolvedRequirements.add(req))
 						continue;
 
 					Set<Configurator<?, ?>> configurators = new HashSet<>();
@@ -220,25 +232,37 @@ public class TMain {
 						if (c.configurator == null)
 							continue;
 
-						AnalyserConfiguration<?> config = c.configurator.createConfiguration(o);
+						AnalyserConfiguration<?> config = c.configurator.createConfiguration(req);
 						if (config == null)
 							continue;
 
-						System.err.println("Solving requirement " + o + " with " + config);
-						do1(config);
+						System.err.println("Solving requirement " + req + " with " + config);
+						config = addAnalyserConfiguration(config);
+
+						Object old = resolved.putIfAbsent(req, config);
+						if (old != null)
+							throw new Error("req=" + req + " " + config + " " + old);
 
 						configurators.add(c.configurator);
 					}
 
 					switch (configurators.size()) {
 					case 0:
-						throw new Error("Unresolved requirement: " + o);
+						throw new Error("Unresolved requirement: " + req);
 					case 1:
 						break;
 					default:
-						throw new Error("Ambigous requirement: " + o + ", " + configurators);
+						throw new Error("Ambigous requirement: " + req + ", " + configurators);
 					}
 				}
+			}
+
+			if (!anas.containsAll(config2req.keySet()))
+				throw new Error();
+			if (!anas.containsAll(resolved.values())) {
+				anas.stream().forEach(x -> System.out.println("ANA " + x));
+				resolved.values().stream().forEach(x -> System.out.println("RES " + x));
+				throw new Error();
 			}
 		}
 
@@ -250,7 +274,7 @@ public class TMain {
 
 		Resolver r = new Resolver();
 		for (AnalyserConfiguration<?> c : config.configs)
-			r.do1(c);
+			r.addAnalyserConfiguration(c);
 
 		r.finish();
 
@@ -259,6 +283,11 @@ public class TMain {
 		}
 
 		this.anas = r.anas;
+
+		System.err.println("CONFIG -> REQ");
+		r.config2req.entries().stream().forEach(System.err::println);
+		System.err.println("REQ -> CONFIG");
+		r.resolved.entrySet().stream().forEach(System.err::println);
 
 		System.err.println("START");
 		for (RootAnalysis rootAnaylsis : create(anas, RootAnalysis.class)) {

@@ -11,6 +11,7 @@ import com.github.da.t.ClassResourceProcessor;
 import com.github.da.t.JarResourceProcessor;
 import com.github.da.t.JpaAnalysis;
 import com.github.da.t.JpaAnalysis2;
+import com.github.da.t.JpaAnalysis3;
 import com.github.da.t.RootAnalysis1Config;
 import com.github.da.t.TMain;
 
@@ -35,6 +36,8 @@ public class TMainTest {
 		TMain.run(config);
 		config = config.with(AnalyserConfiguration.of(JpaAnalysis.class));
 		config = config.with(AnalyserConfiguration.of(JpaAnalysis2.class));
+		TMain.run(config);
+		config = config.with(AnalyserConfiguration.of(JpaAnalysis3.class));
 		TMain.run(config);
 	}
 

@@ -13,6 +13,8 @@ public class AnnotationScannerConfigurator implements Configurator<AnnotationSca
 			return new AnnotationScannerConfig(1, 1);
 		if (requirement == DummyRequirement2.class)
 			return new AnnotationScannerConfig(2, 1);
+		if (requirement == DummyRequirement3.class)
+			return new AnnotationScannerConfig(2, 1);
 		return null;
 	}
 
@@ -23,6 +25,7 @@ public class AnnotationScannerConfigurator implements Configurator<AnnotationSca
 
 	@Override
 	public AnnotationScannerConfig merge(AnnotationScannerConfig config1, AnnotationScannerConfig config2) {
+		System.err.println("TRY MERGE " + config1 + " " + config2);
 		if (config1.what == config2.what)
 			return new AnnotationScannerConfig(config1.what, config1.many + config2.many);
 		else
