@@ -173,11 +173,10 @@ public class TMain {
 	class Resolver {
 		private final List<AnalyserConfiguration<?>> anas = new LinkedList<>();
 
-		private Set<Object> openRequirements = new HashSet<>();
-		private final Set<Object> resolvedRequirements = new HashSet<>();
+		private Set<Object> unresolvedRequirements = new HashSet<>();
 
-		private final Multimap<AnalyserConfiguration<?>, Object> config2req = HashMultimap.create();
-		private final Map<Object, AnalyserConfiguration<?>> resolved = new HashMap<>();
+		private final Multimap<AnalyserConfiguration<?>, Object> requirements = HashMultimap.create();
+		private final Map<Object, AnalyserConfiguration<?>> requirementResolution = new HashMap<>();
 
 		<A, C extends AnalyserConfiguration<A>> C addAnalyserConfiguration(C c) {
 			AnalyserMetadata<A, C> metadata = analysersMetadata.get(c);
@@ -200,15 +199,15 @@ public class TMain {
 					// replace configuration to add by merged configuration
 					c = merged;
 					ia.remove();
-					config2req.removeAll(a);
+					requirements.removeAll(a);
 					C c1 = c;
-					resolved.replaceAll((k, v) -> v == a ? c1 : v);
+					requirementResolution.replaceAll((k, v) -> v == a ? c1 : v);
 					break;
 				}
 
 				for (Object requirement : metadata.configurator.getRequirements(c)) {
-					openRequirements.add(requirement);
-					config2req.put(c, requirement);
+					unresolvedRequirements.add(requirement);
+					requirements.put(c, requirement);
 				}
 			}
 
@@ -218,12 +217,12 @@ public class TMain {
 		}
 
 		void finish() {
-			while (!openRequirements.isEmpty()) {
-				Set<Object> todo = openRequirements;
-				openRequirements = new HashSet<>();
+			while (!unresolvedRequirements.isEmpty()) {
+				Set<Object> todo = unresolvedRequirements;
+				unresolvedRequirements = new HashSet<>();
 
 				for (Object req : todo) {
-					if (!resolvedRequirements.add(req))
+					if (requirementResolution.containsKey(req))
 						continue;
 
 					Set<Configurator<?, ?>> configurators = new HashSet<>();
@@ -239,7 +238,7 @@ public class TMain {
 						System.err.println("Solving requirement " + req + " with " + config);
 						config = addAnalyserConfiguration(config);
 
-						Object old = resolved.putIfAbsent(req, config);
+						Object old = requirementResolution.putIfAbsent(req, config);
 						if (old != null)
 							throw new Error("req=" + req + " " + config + " " + old);
 
@@ -257,11 +256,11 @@ public class TMain {
 				}
 			}
 
-			if (!anas.containsAll(config2req.keySet()))
+			if (!anas.containsAll(requirements.keySet()))
 				throw new Error();
-			if (!anas.containsAll(resolved.values())) {
+			if (!anas.containsAll(requirementResolution.values())) {
 				anas.stream().forEach(x -> System.out.println("ANA " + x));
-				resolved.values().stream().forEach(x -> System.out.println("RES " + x));
+				requirementResolution.values().stream().forEach(x -> System.out.println("RES " + x));
 				throw new Error();
 			}
 		}
@@ -285,9 +284,9 @@ public class TMain {
 		this.anas = r.anas;
 
 		System.err.println("CONFIG -> REQ");
-		r.config2req.entries().stream().forEach(System.err::println);
+		r.requirements.entries().stream().forEach(System.err::println);
 		System.err.println("REQ -> CONFIG");
-		r.resolved.entrySet().stream().forEach(System.err::println);
+		r.requirementResolution.entrySet().stream().forEach(System.err::println);
 
 		System.err.println("START");
 		for (RootAnalysis rootAnaylsis : create(anas, RootAnalysis.class)) {
