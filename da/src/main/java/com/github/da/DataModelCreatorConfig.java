@@ -6,7 +6,7 @@ import java.util.List;
 import com.github.da.t.AnalyserConfiguration;
 
 @Configuration
-public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreator2> {
+public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreator> {
 	private final List<Class<? extends TypeMapper>> typeMappers;
 
 	public interface Builder {
@@ -32,7 +32,7 @@ public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreat
 	}
 
 	public DataModelCreatorConfig(List<Class<? extends TypeMapper>> typeMappers) {
-		super(DataModelCreator2.class);
+		super(DataModelCreator.class);
 		this.typeMappers = typeMappers;
 	}
 

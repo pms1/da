@@ -24,7 +24,7 @@ import org.objectweb.asm.Type;
 import com.github.da.AnalysisResult;
 import com.github.da.AsmIds;
 import com.github.da.ClassData;
-import com.github.da.ClassHierarchy2;
+import com.github.da.ClassHierarchy;
 import com.github.da.Include;
 import com.github.da.PropertyNaming;
 import com.github.pms1.asm.annotation.AnnotationData;
@@ -46,7 +46,7 @@ public class JpaModelCreator implements com.github.da.t.ClassProcessor {
 
 	@Override
 	public void run(ClassReader v) {
-		ClassHierarchy2 ch = ar.get(ClassHierarchy2.class);
+		ClassHierarchy ch = ar.get(ClassHierarchy.class);
 
 		v.accept(new ClassVisitor(Opcodes.ASM5) {
 

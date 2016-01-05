@@ -31,7 +31,7 @@ import javax.inject.Inject;
 import org.objectweb.asm.Type;
 
 import com.github.da.ClassData;
-import com.github.da.ClassHierarchy2;
+import com.github.da.ClassHierarchy;
 import com.github.da.JpaAccess;
 import com.github.da.TypeUtil;
 import com.github.da.t.RootAnalysis;
@@ -51,7 +51,7 @@ public class JpaModelCreatorPhase2 implements RootAnalysis {
 	}
 
 	@Inject
-	ClassHierarchy2 ch;
+	ClassHierarchy ch;
 
 	boolean findId(ClassData t, Function<TResult, Map<String, ? extends JpaProperty>> e) {
 		Objects.requireNonNull(t);

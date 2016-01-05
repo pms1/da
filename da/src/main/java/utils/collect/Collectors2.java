@@ -1,4 +1,4 @@
-package com.github.da;
+package utils.collect;
 
 import java.util.Arrays;
 import java.util.Collections;

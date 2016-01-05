@@ -10,7 +10,7 @@ public class ClassDataCreatorConfigurator
 
 	@Override
 	public ClassDataCreatorConfig createConfiguration(Object r) {
-		if (r.equals(ClassHierarchy2.class) || r.equals(ClassData.class)) {
+		if (r.equals(ClassHierarchy.class) || r.equals(ClassData.class)) {
 			return new ClassDataCreatorConfig(Data.CLASS);
 		} else if (r.equals(MethodData.class)) {
 			return new ClassDataCreatorConfig(Data.CLASS, Data.METHOD);

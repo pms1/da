@@ -35,9 +35,9 @@ import sql.TableModel;
 import sql.types.IntType;
 import sql.types.SqlType;
 
-public class DataModelCreator2 implements com.github.da.t.RootAnalysis {
+public class DataModelCreator implements com.github.da.t.RootAnalysis {
 	@Inject
-	ClassHierarchy2 ch;
+	ClassHierarchy ch;
 
 	@Inject
 	Resolver resolve;

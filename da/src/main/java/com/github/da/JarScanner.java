@@ -14,12 +14,12 @@ import com.google.common.collect.Iterables;
 import utils.text.Describable;
 import utils.text.Description;
 
-@Include(JarJarProcessor.class)
+@Include(JarResourceProcessor.class)
 public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 
 	@Inject
 	@All
-	List<JarJarProcessor> jpps;
+	List<JarResourceProcessor> jpps;
 
 	@Inject
 	JarScannerConfig config;
@@ -27,7 +27,7 @@ public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 	@Override
 	public void run() throws IOException {
 
-		JarJarProcessor jpp = Iterables.getOnlyElement(jpps);
+		JarResourceProcessor jpp = Iterables.getOnlyElement(jpps);
 
 		jpp.run(config.getPath(), new Provider<InputStream>() {
 

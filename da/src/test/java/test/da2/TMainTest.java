@@ -13,9 +13,9 @@ import javax.inject.Inject;
 
 import org.junit.Test;
 
-import com.github.da.ClassProcessor2;
+import com.github.da.ClassResourceProcessor;
 import com.github.da.Include;
-import com.github.da.JarJarProcessor;
+import com.github.da.JarResourceProcessor;
 import com.github.da.t.All;
 import com.github.da.t.AnalyserConfiguration;
 import com.github.da.t.Analysis;
@@ -65,8 +65,8 @@ public class TMainTest {
 
 		TMain.run(config);
 
-		config = config.with(AnalyserConfiguration.of(ClassProcessor2.class));
-		config = config.with(AnalyserConfiguration.of(JarJarProcessor.class));
+		config = config.with(AnalyserConfiguration.of(ClassResourceProcessor.class));
+		config = config.with(AnalyserConfiguration.of(JarResourceProcessor.class));
 		config = config.with(new AnnotationScannerConfig(3, 1));
 
 		TMain.run(config);

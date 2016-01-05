@@ -15,7 +15,7 @@ import com.github.da.t.ClassProcessor;
 import asm.ClassSignature;
 import ts.AsmTypeParser;
 
-@Include(ClassProcessor2.class)
+@Include(ClassResourceProcessor.class)
 public class ClassDataCreator implements ClassProcessor {
 
 	@Inject
@@ -26,7 +26,7 @@ public class ClassDataCreator implements ClassProcessor {
 
 	@Override
 	public void run(ClassReader v) {
-		ClassHierarchy2 ch = ar.getOrCreate(ClassHierarchy2.class, ClassHierarchy2::new);
+		ClassHierarchy ch = ar.getOrCreate(ClassHierarchy.class, ClassHierarchy::new);
 
 		boolean doClassType = config.datas.contains(Data.CLASS_TYPE);
 		boolean doClassSignature = config.datas.contains(Data.CLASS_SIGNATURE);

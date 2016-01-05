@@ -17,7 +17,7 @@ import com.github.da.t.ResourceProcessor;
 import utils.text.Describable;
 import utils.text.Description;
 
-public class ClassProcessor2 implements ResourceProcessor, Describable {
+public class ClassResourceProcessor implements ResourceProcessor, Describable {
 
 	@Inject
 	@All

@@ -27,7 +27,6 @@ import javax.inject.Inject;
 import org.jboss.weld.injection.FieldInjectionPoint;
 
 import com.github.da.AnalysisResult;
-import com.github.da.Collectors2;
 import com.github.da.Configuration;
 import com.github.da.Ext;
 import com.github.da.Ext.AnalyserConfigurationBean;
@@ -45,6 +44,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import utils.collect.Collectors2;
 import utils.text.Description;
 
 public class TMain {

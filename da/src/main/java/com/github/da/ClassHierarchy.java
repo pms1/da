@@ -8,7 +8,7 @@ import java.util.Objects;
 import org.objectweb.asm.Type;
 
 @AnaScope
-public class ClassHierarchy2 {
+public class ClassHierarchy {
 	private Map<ClassId, ClassData> data = new HashMap<>();
 
 	public ClassData get(ClassId classId) {

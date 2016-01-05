@@ -21,7 +21,7 @@ import utils.text.Describable;
 import utils.text.Description;
 
 @Analysis
-public class JarJarProcessor implements ResourceProcessor, Describable {
+public class JarResourceProcessor implements ResourceProcessor, Describable {
 
 	@Inject
 	@All
