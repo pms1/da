@@ -26,12 +26,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
-import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
+import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
-import com.github.da.DeploymentAnalyserMain;
 import com.github.da.HibernateDB2TypeMapper;
 import com.github.da.HibernateTypeMapper;
+import com.github.da.t.AnalysisConfiguration;
+import com.github.da.t.TMain;
 
 import sql.ColumnId;
 import sql.ColumnModel;
@@ -48,13 +49,13 @@ public class TM1 {
 			Class<?> c = Bottom1.class;
 			Path p = findDir(c);
 			AnalysisConfiguration config = new AnalysisConfiguration();
-			config.what = new String[] { p.toString() };
+			config.with(ClasspathElementScannerConfig.newBuilder().withPath(p).build());
 			DataModelCreatorConfig dbmodelGen = DataModelCreatorConfig.newBuilder()
 					.withTypeMapper(HibernateDB2TypeMapper.class)//
 					.withTypeMapper(HibernateTypeMapper.class)//
 					.build();
 			config.withAnalysis(dbmodelGen);
-			AnalysisResult ar = DeploymentAnalyserMain.doit(config);
+			AnalysisResult ar = TMain.run(config);
 			DatabaseModel dm = ar.get(DatabaseModel.class);
 
 			Comparator c1 = new Comparator("hib", i -> {

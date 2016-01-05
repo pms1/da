@@ -1,14 +1,17 @@
 package da;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 
-import com.github.da.AnalysisConfiguration;
-import com.github.da.DeploymentAnalyserMain;
+import com.github.da.JarScannerConfig;
+import com.github.da.t.AnalysisConfiguration;
+import com.github.da.t.TMain;
 
 public class TM2 {
 	public static void main(String[] args) throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
-		config.what = new String[] { "c:/temp/ears.zip" };
-		DeploymentAnalyserMain.doit(config);
+		config.with(JarScannerConfig.newBuilder().withPath(Paths.get("c:/temp/ears.zip")).build());
+
+		TMain.run(config);
 	}
 }

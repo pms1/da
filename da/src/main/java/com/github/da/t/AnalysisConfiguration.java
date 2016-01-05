@@ -16,6 +16,11 @@ public class AnalysisConfiguration {
 		return this;
 	}
 
+	public AnalysisConfiguration withAnalysis(AnalyserConfiguration<?> config) {
+		configs.add(config);
+		return this;
+	}
+
 	List<AnalyserConfiguration<?>> getAnalyserConfigurations() {
 		return new ArrayList<>(configs);
 	}

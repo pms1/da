@@ -29,7 +29,6 @@ import org.jboss.weld.injection.FieldInjectionPoint;
 import com.github.da.AnalysisResult;
 import com.github.da.Collectors2;
 import com.github.da.Configuration;
-import com.github.da.ConfigurationExtension;
 import com.github.da.Ext;
 import com.github.da.Ext.AnalyserConfigurationBean;
 import com.github.da.Ext.AnalyserListBean;
@@ -53,7 +52,6 @@ public class TMain {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 		Stopwatch sw = Stopwatch.createStarted();
 		try (Application a = new ApplicationBuilder() //
-				.with(new ConfigurationExtension(new com.github.da.AnalysisConfiguration()))//
 				.with(new Ext())//
 				.build()) {
 			a.get(TMain.class).doit2(config);
@@ -401,7 +399,7 @@ public class TMain {
 	@Inject
 	CC cc;
 
-	public void doit2(AnalysisConfiguration config) throws IOException {
+	public AnalysisResult doit2(AnalysisConfiguration config) throws IOException {
 
 		System.err.println(analysersMetadata.toString());
 
@@ -480,6 +478,8 @@ public class TMain {
 		}
 
 		System.err.println("\ndone\n");
+
+		return ar;
 	}
 
 	private <T> List<T> create(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
@@ -552,13 +552,12 @@ public class TMain {
 
 	}
 
-	public static void run(com.github.da.t.AnalysisConfiguration config) throws IOException {
+	public static AnalysisResult run(AnalysisConfiguration config) throws IOException {
 		Stopwatch sw = Stopwatch.createStarted();
 		try (Application a = new ApplicationBuilder() //
-				.with(new ConfigurationExtension(new com.github.da.AnalysisConfiguration()))//
 				.with(new Ext())//
 				.build()) {
-			a.get(TMain.class).doit2(config);
+			return a.get(TMain.class).doit2(config);
 		} finally {
 			sw.stop();
 			System.err.println("Anlysis done in " + sw);

@@ -3,15 +3,14 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
-import com.github.da.DeploymentAnalyserMain;
 import com.github.da.HibernateDB2TypeMapper;
 import com.github.da.HibernateTypeMapper2;
 import com.github.da.JarScannerConfig;
 import com.github.da.JpaModelCreatorConfig;
+import com.github.da.t.AnalysisConfiguration;
 import com.github.da.t.TMain;
 import com.google.common.base.Stopwatch;
 
@@ -58,10 +57,10 @@ public class AnaTestMain {
 						.build();
 
 				AnalysisConfiguration config = new AnalysisConfiguration(); //
-				config = config.withAnalysis(root);
+				config = config.with(root);
 
 				JpaModelCreatorConfig jpa = JpaModelCreatorConfig.newBuilder().build();
-				config = config.withAnalysis(jpa);
+				config = config.with(jpa);
 
 				// .withAnalysis(JarAnalysis.class, dc) //
 				// .withAnalysis(ClassProcessor.class) //
@@ -78,17 +77,17 @@ public class AnaTestMain {
 				// .withAnalysis(A3.class, new A3Config(TM1.class)) //
 				// .withAnalysis(A3.class, new A3Config(TM2.class));
 
-				AnalysisResult result = DeploymentAnalyserMain.doit(config);
+				AnalysisResult result = TMain.run(config);
 				n.stop();
 
 				o.start();
 				AnalysisConfiguration config1 = new AnalysisConfiguration();
-				config.what = new String[] { zip.toString() };
+				// FIXME config.what = new String[] { zip.toString() };
 				dbmodelGen = DataModelCreatorConfig.newBuilder().withTypeMapper(HibernateDB2TypeMapper.class)//
 						.withTypeMapper(HibernateTypeMapper2.class)//
 						.build();
-				config.withAnalysis(dbmodelGen);
-				AnalysisResult ar = DeploymentAnalyserMain.doit(config);
+				config.with(dbmodelGen);
+				AnalysisResult ar = TMain.run(config);
 				DatabaseModel databaseModel = ar.get(DatabaseModel.class);
 				System.err.println("databaseModel=" + databaseModel);
 				o.stop();

@@ -26,13 +26,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
-import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
-import com.github.da.DeploymentAnalyserMain;
 import com.github.da.HibernateH2TypeMapper;
 import com.github.da.HibernateTypeMapper2;
+import com.github.da.t.AnalysisConfiguration;
+import com.github.da.t.TMain;
 
 import sql.ColumnId;
 import sql.ColumnModel;
@@ -47,7 +47,7 @@ public class CompareH2 {
 			Class<?> c = Bottom1.class;
 			Path p = findDir(c);
 			AnalysisConfiguration config = new AnalysisConfiguration();
-			config.what = new String[] { p.toString() };
+			config = config.with(ClasspathElementScannerConfig.newBuilder().withPath(p).build());
 			config = config.withAnalysis(ClasspathElementScannerConfig.newBuilder() //
 					.withPath(p) //
 					.build());
@@ -56,7 +56,7 @@ public class CompareH2 {
 					.withTypeMapper(HibernateTypeMapper2.class)//
 					.build();
 			config = config.withAnalysis(dbmodelGen);
-			AnalysisResult ar = DeploymentAnalyserMain.doit(config);
+			AnalysisResult ar = TMain.run(config);
 			DatabaseModel dm = ar.get(DatabaseModel.class);
 
 			DatabaseModel hib = MyPUH2.Holder.dm;
