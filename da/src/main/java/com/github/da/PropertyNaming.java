@@ -1,7 +1,7 @@
 package com.github.da;
 
 public class PropertyNaming {
-	static String toProperty(String name) {
+	public static String toProperty(String name) {
 		if (name.startsWith("get") || name.startsWith("set")) {
 			name = name.substring(3);
 			// if (!Character.isUpperCase(name.charAt(0)))

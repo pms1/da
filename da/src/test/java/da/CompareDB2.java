@@ -29,8 +29,8 @@ import javax.persistence.Table;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
-import com.github.da.HibernateDB2TypeMapper;
-import com.github.da.HibernateTypeMapper;
+import com.github.da.jpa.HibernateDB2TypeMapper;
+import com.github.da.jpa.HibernateTypeMapper;
 import com.github.da.t.AnalysisConfiguration;
 import com.github.da.t.TMain;
 

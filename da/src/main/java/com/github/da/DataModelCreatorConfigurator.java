@@ -3,6 +3,8 @@ package com.github.da;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.github.da.jpa.JpaProperty;
+
 import asm.ClassSignature;
 
 public class DataModelCreatorConfigurator

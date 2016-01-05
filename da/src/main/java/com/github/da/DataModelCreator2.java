@@ -17,6 +17,12 @@ import javax.inject.Inject;
 
 import org.objectweb.asm.Type;
 
+import com.github.da.jpa.CollectionTableAnnotation;
+import com.github.da.jpa.JoinColumnAnnotation;
+import com.github.da.jpa.JoinTableAnnotation;
+import com.github.da.jpa.JpaAnalysisResult2;
+import com.github.da.jpa.JpaProperty;
+import com.github.da.jpa.TableAnnotation;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
@@ -171,7 +177,7 @@ public class DataModelCreator2 implements com.github.da.t.RootAnalysis {
 
 	public TableModel addColumns(TableModel tableModel, String className, Collection<JpaProperty> collection) {
 		for (JpaProperty p : collection) {
-			switch (p.fieldType) {
+			switch (p.getFieldType()) {
 			case VALUE:
 				ColumnModel.Builder b = ColumnModel.newBuilder();
 				b = b.withId(columnId(tableModel.getId(), p));
@@ -179,7 +185,7 @@ public class DataModelCreator2 implements com.github.da.t.RootAnalysis {
 				tableModel = TableModel.Transformations.addColumn(tableModel, b.build());
 				break;
 			case ONE_TO_ONE:
-				ClassData other = ch.get(p.type);
+				ClassData other = ch.get(p.getType());
 				if (other == null)
 					throw new Error();
 				JpaAnalysisResult2 ja = other.get(JpaAnalysisResult2.class);
