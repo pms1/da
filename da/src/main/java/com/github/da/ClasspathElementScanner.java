@@ -7,17 +7,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class ClasspathElementScanner implements RootAnalysis<ClasspathElementScannerConfig> {
+import com.github.da.t.All;
+import com.github.da.t.ResourceProcessor;
+
+public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 
 	@Inject
 	ClasspathElementScannerConfig config;
 
+	@Inject
+	@All
+	List<ResourceProcessor> proc;
+
 	@Override
-	public void run(Processors proc) throws IOException {
+	public void run() throws IOException {
 
 		Files.walkFileTree(config.getPath(), new SimpleFileVisitor<Path>() {
 			@Override
@@ -37,8 +45,8 @@ public class ClasspathElementScanner implements RootAnalysis<ClasspathElementSca
 				};
 
 				System.err.println("XXXX " + file);
-				for (JarContentProcessor<?> i : proc.invokers)
-					i.run(proc, file, pp);
+				for (ResourceProcessor i : proc)
+					i.run(file, pp);
 
 				// TODO Auto-generated method stub
 				return super.visitFile(file, attrs);

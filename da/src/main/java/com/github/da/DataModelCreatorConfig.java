@@ -3,8 +3,10 @@ package com.github.da;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.github.da.t.AnalyserConfiguration;
+
 @Configuration
-public class DataModelCreatorConfig extends Analysis<DataModelCreatorConfig, DataModelCreator2> {
+public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreator2> {
 	private final List<Class<? extends TypeMapper>> typeMappers;
 
 	public interface Builder {

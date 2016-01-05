@@ -14,7 +14,13 @@ public interface Configurator<A, C extends AnalyserConfiguration<A>> {
 	}
 
 	default C merge(C config1, C config2) {
-		return null;
+		if (config1.getClass().equals(AnalyserConfiguration.class)
+				&& config2.getClass().equals(AnalyserConfiguration.class)) {
+			if (config1.getAnalyser() != config2.getAnalyser())
+				throw new Error();
+			return config1;
+		} else
+			return null;
 	}
 
 }

@@ -5,7 +5,8 @@ import com.google.common.collect.Sets;
 
 import asm.ClassSignature;
 
-public class ClassDataCreatorConfigurator implements Configurator<ClassDataCreatorConfig, ClassDataCreator> {
+public class ClassDataCreatorConfigurator
+		implements com.github.da.t.Configurator<ClassDataCreator, ClassDataCreatorConfig> {
 
 	@Override
 	public ClassDataCreatorConfig createConfiguration(Object r) {

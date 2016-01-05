@@ -6,12 +6,12 @@ import java.util.Collections;
 
 import com.github.da.ClassData;
 import com.github.da.ClassHierarchy2;
-import com.github.da.Configurator;
 import com.github.da.FieldData;
 import com.github.da.MethodData;
 import com.google.common.collect.Sets;
 
-public class AnnotationParserConfigurator implements Configurator<AnnotationParserConfig, AnnotationParser> {
+public class AnnotationParserConfigurator
+		implements com.github.da.t.Configurator<AnnotationParser, AnnotationParserConfig> {
 
 	@Override
 	public AnnotationParserConfig createConfiguration(Object requirement) {

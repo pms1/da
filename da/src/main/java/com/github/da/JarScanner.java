@@ -1,31 +1,35 @@
 package com.github.da;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-import com.google.common.io.ByteStreams;
+import com.github.da.t.All;
+import com.google.common.collect.Iterables;
+
+import utils.text.Describable;
+import utils.text.Description;
 
 @Include(JarJarProcessor.class)
-public class JarScanner implements RootAnalysis<JarScannerConfig> {
+public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 
 	@Inject
-	JarJarProcessor jpp;
+	@All
+	List<JarJarProcessor> jpps;
 
 	@Inject
 	JarScannerConfig config;
 
 	@Override
-	public void run(Processors proc) throws IOException {
+	public void run() throws IOException {
 
-		jpp.run(proc, config.getPath(), new Provider<InputStream>() {
+		JarJarProcessor jpp = Iterables.getOnlyElement(jpps);
+
+		jpp.run(config.getPath(), new Provider<InputStream>() {
 
 			@Override
 			public InputStream get() {
@@ -37,45 +41,12 @@ public class JarScanner implements RootAnalysis<JarScannerConfig> {
 			}
 
 		});
+	}
 
-		if(false)
-		try (InputStream is = Files.newInputStream(config.getPath())) {
-			ZipInputStream zis = new ZipInputStream(is);
-
-			for (ZipEntry e = zis.getNextEntry(); e != null; e = zis.getNextEntry()) {
-				if (e.isDirectory())
-					continue;
-				final ZipEntry fe = e;
-
-				Provider<InputStream> pp = new Provider<InputStream>() {
-
-					byte[] data;
-
-					@Override
-					public InputStream get() {
-
-						if (data == null) {
-							long size = fe.getSize();
-
-							try {
-								data = ByteStreams.toByteArray(zis);
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							}
-							if (size != -1 && data.length != size)
-								throw new Error();
-						}
-
-						return new ByteArrayInputStream(data);
-					}
-
-				};
-
-				for (JarContentProcessor<?> x : proc.invokers) {
-					x.run(proc, Paths.get(e.getName()), pp);
-				}
-			}
-		}
+	@Override
+	public void describe(Description d) {
+		d.withValue("config.path", config.getPath()) //
+				.withList("jpps", jpps);
 	}
 
 }

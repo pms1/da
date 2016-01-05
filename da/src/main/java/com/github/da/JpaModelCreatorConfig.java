@@ -1,9 +1,9 @@
 package com.github.da;
 
-import java.nio.file.Path;
+import com.github.da.t.AnalyserConfiguration;
 
-@AnaScope
-public class JpaModelCreatorConfig extends Analysis<JpaModelCreatorConfig,JpaModelCreator> {
+@Configuration
+public class JpaModelCreatorConfig extends AnalyserConfiguration<JpaModelCreator> {
 
 	public interface Builder {
 

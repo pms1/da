@@ -7,7 +7,7 @@ public class AnalyserConfiguration<A> {
 		return analyser;
 	}
 
-	AnalyserConfiguration(Class<A> c) {
+	public AnalyserConfiguration(Class<A> c) {
 		this.analyser = c;
 	}
 

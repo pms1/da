@@ -2,8 +2,10 @@ package com.github.da;
 
 import java.nio.file.Path;
 
-@AnaScope
-public class JarScannerConfig extends Analysis<JarScannerConfig, JarScanner> {
+import com.github.da.t.AnalyserConfiguration;
+
+@Configuration
+public class JarScannerConfig extends AnalyserConfiguration<JarScanner> {
 	private final Path path;
 
 	public interface Builder {

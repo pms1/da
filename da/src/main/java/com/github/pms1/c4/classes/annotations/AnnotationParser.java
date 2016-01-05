@@ -12,22 +12,21 @@ import org.objectweb.asm.Type;
 
 import com.github.da.AnalysisResult;
 import com.github.da.AsmIds;
-import com.github.da.ClassAnalysis;
 import com.github.da.ClassData;
 import com.github.da.ClassHierarchy2;
 import com.github.pms1.asm.annotation.AnnotationBuilder;
 import com.github.pms1.asm.annotation.AnnotationData;
 
-public class AnnotationParser implements ClassAnalysis<AnnotationParserConfig> {
+public class AnnotationParser implements com.github.da.t.ClassProcessor {
 
 	@Inject
 	AnalysisResult ar;
 
 	@Inject
 	AnnotationParserConfig config;
-	
+
 	@Override
-	public void run( ClassReader v) {
+	public void run(ClassReader v) {
 		ClassHierarchy2 ch = ar.get(ClassHierarchy2.class);
 
 		v.accept(new ClassVisitor(Opcodes.ASM5) {

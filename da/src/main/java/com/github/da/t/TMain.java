@@ -1,5 +1,6 @@
 package com.github.da.t;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
@@ -7,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import javax.inject.Inject;
 
 import org.jboss.weld.injection.FieldInjectionPoint;
 
+import com.github.da.AnalysisResult;
 import com.github.da.Collectors2;
 import com.github.da.Configuration;
 import com.github.da.ConfigurationExtension;
@@ -31,10 +34,12 @@ import com.github.da.Ext;
 import com.github.da.Ext.AnalyserConfigurationBean;
 import com.github.da.Ext.AnalyserListBean;
 import com.github.da.Ext.AnalyserListConfigurationBean;
+import com.github.da.Ext.CC;
 import com.github.da.Ext.CC1;
 import com.github.da.Ext.ConfigurationBean;
 import com.github.da.Ext.ConfigurationBeanVisitor;
 import com.github.da.Ext.ConfigurationConfigurationBean;
+import com.github.da.Include;
 import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
 import com.google.common.base.Stopwatch;
@@ -44,7 +49,7 @@ import com.google.common.collect.Multimap;
 import utils.text.Description;
 
 public class TMain {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 		Stopwatch sw = Stopwatch.createStarted();
 		try (Application a = new ApplicationBuilder() //
@@ -56,7 +61,6 @@ public class TMain {
 			sw.stop();
 			System.err.println("Anlysis done in " + sw);
 		}
-
 	}
 
 	private @Inject Instance<Object> i;
@@ -66,7 +70,15 @@ public class TMain {
 	private @Inject BeanManager bm;
 
 	private <T> void traverse(AnalyserConfiguration<?> a, Consumer<AnalyserConfiguration<?>> consumer) {
+		traverse(a, consumer, new HashSet<>());
+	}
+
+	private <T> void traverse(AnalyserConfiguration<?> a, Consumer<AnalyserConfiguration<?>> consumer,
+			Set<Bean<?>> visited) {
 		Bean<T> bean = (Bean<T>) bm.resolve(bm.getBeans(a.getAnalyser()));
+
+		if (!visited.add(bean))
+			return;
 
 		consumer.accept(a);
 
@@ -88,17 +100,26 @@ public class TMain {
 				@Override
 				public <T1> void visit(AnalyserListBean<T1> bean) {
 					anas.stream().filter((a) -> bean.getTargetClass().isAssignableFrom(a.getAnalyser()))
-							.forEach(consumer);
+							.forEach((a) -> traverse(a, consumer, visited));
 				}
 			});
 		}
 	}
 
-	<T> T instantiate(Class<T> clazz, Object... configs) {
+	<T> T instantiate(AnalyserConfiguration<T> config) {
+		return instantiate(config, new HashMap<>());
+	}
 
-		Bean<T> bean = (Bean<T>) bm.resolve(bm.getBeans(clazz));
+	<T> T instantiate(AnalyserConfiguration<T> config,
+			Map<AnalyserConfiguration<?>, Set<Consumer<Object>>> inCreation) {
+
+		Object[] configs = new Object[] { config };
+
+		Bean<T> bean = (Bean<T>) bm.resolve(bm.getBeans(config.getAnalyser()));
 
 		Collection<ConfigurationBean<?>> deps = ext.getDependencies(bean);
+
+		inCreation.put(config, new HashSet<>());
 
 		try {
 			cc1.activate();
@@ -126,14 +147,15 @@ public class TMain {
 							throw new Error("Missing configuration of type " + bean.getConfigurationClass());
 						}
 
-						System.err.println("CONFIG " + config);
-
 						Object dconfig = bean.extract(config);
 
 						Object value;
 
 						if (dconfig != null) {
-							value = instantiate(bean.getTargetClass(), dconfig);
+							// FIXME
+							value = instantiate((AnalyserConfiguration) dconfig);
+							if (!bean.getTargetClass().equals(value.getClass()))
+								throw new Error();
 						} else {
 							value = null;
 						}
@@ -154,21 +176,16 @@ public class TMain {
 						if (dconfig != null) {
 							value = new LinkedList<>();
 							for (Object dconfig2 : dconfig) {
-								Class<?> c;
+								AnalyserConfiguration c;
 								if (dconfig2 instanceof AnalyserConfiguration) {
-									c = ((AnalyserConfiguration<?>) dconfig2).getAnalyser();
-									if (!bean.getTargetClass().isAssignableFrom(c))
+									c = (AnalyserConfiguration) dconfig2;
+									if (!bean.getTargetClass().isAssignableFrom(c.getAnalyser()))
 										throw new Error();
 								} else {
-									c = bean.getTargetClass();
+									c = AnalyserConfiguration.of(bean.getTargetClass());
 								}
 
-								System.err.println("NEXT CONFIG " + c + " " + dconfig2);
-
-								Object instantiate = instantiate(c, dconfig2);
-
-								System.err.println("NEXT CONFIG " + instantiate);
-								value.add(instantiate);
+								value.add(instantiate(c));
 							}
 							value = Collections.unmodifiableList(value);
 						} else
@@ -179,16 +196,34 @@ public class TMain {
 
 					@Override
 					public <T1> void visit(AnalyserListBean<T1> bean) {
-						cc1.bind(bean, create(anas, bean.getTargetClass()));
+
+						List<AnalyserConfiguration<?>> create2 = (List) create2(anas, bean.getTargetClass());
+
+						List result = new LinkedList<>();
+						for (AnalyserConfiguration<?> c : create2) {
+							Set<Consumer<Object>> set = inCreation.get(c);
+							if (set != null) {
+								int i = result.size();
+								set.add((a) -> result.set(i, a));
+								result.add(null);
+							} else
+								result.add(instantiate(c));
+						}
+						cc1.bind(bean, result);
 					}
 
 				});
 			}
 
-			return i.select(clazz).get();
+			T result = i.select(config.getAnalyser()).get();
+
+			inCreation.remove(config).forEach((c) -> c.accept(result));
+
+			return result;
 		} finally {
 			cc1.deactivate();
 		}
+
 	}
 
 	@Inject
@@ -198,7 +233,8 @@ public class TMain {
 	class Resolver {
 		private final List<AnalyserConfiguration<?>> anas = new LinkedList<>();
 
-		private Set<Object> unresolvedRequirements = new HashSet<>();
+		private LinkedHashSet<Object> unresolvedRequirements = new LinkedHashSet<>();
+		private LinkedHashSet<Include> unresolvedInclude = new LinkedHashSet<>();
 
 		private final Multimap<AnalyserConfiguration<?>, Object> requirements = HashMultimap.create();
 		private final Map<Object, AnalyserConfiguration<?>> requirementResolution = new HashMap<>();
@@ -236,57 +272,80 @@ public class TMain {
 				}
 			}
 
+			Collections.addAll(unresolvedInclude, c.getAnalyser().getAnnotationsByType(Include.class));
+
 			anas.add(c);
 
 			return c;
 		}
 
 		void finish() {
-			while (!unresolvedRequirements.isEmpty()) {
-				Set<Object> todo = unresolvedRequirements;
-				unresolvedRequirements = new HashSet<>();
+			while (!unresolvedRequirements.isEmpty() || !unresolvedInclude.isEmpty()) {
+				while (!unresolvedRequirements.isEmpty()) {
+					Set<Object> todo = unresolvedRequirements;
+					unresolvedRequirements = new LinkedHashSet<>();
 
-				for (Object req : todo) {
-					if (requirementResolution.containsKey(req))
-						continue;
-
-					Set<Configurator<?, ?>> configurators = new HashSet<>();
-
-					for (AnalyserMetadata<?, ?> c : analysersMetadata) {
-						if (c.configurator == null)
+					for (Object req : todo) {
+						if (requirementResolution.containsKey(req))
 							continue;
 
-						AnalyserConfiguration<?> config = c.configurator.createConfiguration(req);
-						if (config == null)
-							continue;
+						Set<Configurator<?, ?>> configurators = new HashSet<>();
 
-						System.err.println("Solving requirement " + req + " with " + config);
-						config = addAnalyserConfiguration(config);
+						for (AnalyserMetadata<?, ?> c : analysersMetadata) {
+							if (c.configurator == null)
+								continue;
 
-						Object old = requirementResolution.putIfAbsent(req, config);
-						if (old != null)
-							throw new Error("req=" + req + " " + config + " " + old);
+							AnalyserConfiguration<?> config = c.configurator.createConfiguration(req);
+							if (config == null)
+								continue;
 
-						configurators.add(c.configurator);
-					}
+							System.err.println("Solving requirement " + req + " with " + config);
+							config = addAnalyserConfiguration(config);
 
-					switch (configurators.size()) {
-					case 0:
-						throw new Error("Unresolved requirement: " + req);
-					case 1:
-						break;
-					default:
-						throw new Error("Ambigous requirement: " + req + ", " + configurators);
+							Object old = requirementResolution.putIfAbsent(req, config);
+							if (old != null)
+								throw new Error(
+										"Duplicate resolution of requirement '" + req + "': " + config + " " + old);
+
+							configurators.add(c.configurator);
+						}
+
+						switch (configurators.size()) {
+						case 0:
+							throw new Error("Unresolved requirement: " + req);
+						case 1:
+							break;
+						default:
+							throw new Error("Ambigous requirement: " + req + ", " + configurators);
+						}
 					}
 				}
-			}
 
-			if (!anas.containsAll(requirements.keySet()))
-				throw new Error();
-			if (!anas.containsAll(requirementResolution.values())) {
-				anas.stream().forEach(x -> System.out.println("ANA " + x));
-				requirementResolution.values().stream().forEach(x -> System.out.println("RES " + x));
-				throw new Error();
+				if (!anas.containsAll(requirements.keySet()))
+					throw new Error();
+				if (!anas.containsAll(requirementResolution.values())) {
+					anas.stream().forEach(x -> System.out.println("ANA " + x));
+					requirementResolution.values().stream().forEach(x -> System.out.println("RES " + x));
+					throw new Error();
+				}
+
+				if (!unresolvedInclude.isEmpty()) {
+					Set<Include> todo = unresolvedInclude;
+					unresolvedInclude = new LinkedHashSet<>();
+
+					for (Include inc : todo) {
+
+						if (anas.stream().anyMatch((a) -> a.getAnalyser().equals(inc.value())))
+							continue;
+
+						AnalyserMetadata<?, ?> metadata = analysersMetadata.get(inc.value());
+						if (metadata != null && !(metadata.configClass == null
+								|| AnalyserConfiguration.class.equals(metadata.configClass)))
+							throw new Error("" + inc.value());
+
+						addAnalyserConfiguration(AnalyserConfiguration.of(inc.value()));
+					}
+				}
 			}
 		}
 
@@ -304,12 +363,15 @@ public class TMain {
 					AnalyserConfiguration<?> a = ia.next();
 
 					if (requirements.get(a).stream().allMatch(req -> resolved.contains(req))) {
+						// System.err.println("RESOLVED " + a);
 						ia.remove();
 						result.add(a);
 
 						traverse(a, (c) -> {
 							if (!anas.contains(c))
 								throw new Error();
+
+							// System.err.println(" INCLUDED " + c);
 
 							requirementResolution.entrySet().forEach((e) -> {
 								if (e.getValue() == c)
@@ -336,7 +398,10 @@ public class TMain {
 
 	Resolver r;
 
-	public void doit2(AnalysisConfiguration config) {
+	@Inject
+	CC cc;
+
+	public void doit2(AnalysisConfiguration config) throws IOException {
 
 		System.err.println(analysersMetadata.toString());
 
@@ -346,22 +411,26 @@ public class TMain {
 
 		r.finish();
 
-		for (Object o : r.anas) {
-			System.err.println("FINAL " + o);
-		}
-
 		this.anas = r.anas;
 
+		System.err.println("FINAL");
+		r.anas.stream().forEach((x) -> System.err.println("  " + x));
 		System.err.println("CONFIG -> REQ");
-		r.requirements.entries().stream().forEach(System.err::println);
+		r.requirements.entries().stream().forEach((x) -> System.err.println("  " + x));
 		System.err.println("REQ -> CONFIG");
-		r.requirementResolution.entrySet().stream().forEach(System.err::println);
+		r.requirementResolution.entrySet().stream().forEach((x) -> System.err.println("  " + x));
 
 		System.err.println("START");
-		for (AnalyserConfiguration<RootAnalysis> a : create2(anas, RootAnalysis.class)) {
-			RootAnalysis rootAnaylsis = instantiate(a.getAnalyser(), a);
-			System.err.print(new Description().describe(rootAnaylsis));
-			rootAnaylsis.run();
+		AnalysisResult ar = new AnalysisResult("foo");
+		cc.activate(ar);
+		try {
+			for (AnalyserConfiguration<RootAnalysis> a : create2(anas, RootAnalysis.class)) {
+				RootAnalysis rootAnaylsis = instantiate(a);
+				System.err.print("running " + new Description().describe(rootAnaylsis));
+				rootAnaylsis.run();
+			}
+		} finally {
+			cc.deactivate();
 		}
 		System.err.println("END");
 		// cc1.activate();
@@ -371,51 +440,50 @@ public class TMain {
 
 		if (false) {
 			{
-				A2 a2 = instantiate(A2.class, null, new A2Config());
+				A2 a2 = instantiate(new A2Config());
 				System.err.println("A2=" + a2);
 			}
 
-			{
-				C2 c2 = new C2();
-				c2.a2 = Arrays.asList(new A2Config(), new A2Config());
-				A1 a1 = instantiate(A1.class, null, new C1(), c2);
-				System.err.println("A1=" + a1);
-			}
-
-			{
-				A1 a1 = instantiate(A1.class, null, new C1(), new C2());
-				System.err.println("A1=" + a1);
-			}
-
-			{
-				A3 a3 = instantiate(A3.class, null);
-				System.err.println("A3=" + a3);
-			}
-
-			{
-				A31Config a31c = new A31Config();
-				a31c.a41c = new A41Config();
-				A31 a31 = instantiate(A31.class, null, a31c);
-				System.err.println("A3=" + a31);
-			}
-
-			{
-				TypeMappersConfig c = new TypeMappersConfig();
-				c = c.withTypeMapper(AnalyserConfiguration.of(TM1.class));
-				c = c.withTypeMapper(new TM2Config());
-				TMUserConfig tmUserConfig = new TMUserConfig();
-				tmUserConfig.tmConfig = c;
-				TMUser user = instantiate(TMUser.class, null, tmUserConfig);
-				System.err.println("U " + asString(user));
-			}
+			// {
+			// C2 c2 = new C2();
+			// c2.a2 = Arrays.asList(new A2Config());
+			// A1 a1 = instantiate(new C1(), c2);
+			// System.err.println("A1=" + a1);
+			// }
+			//
+			// {
+			// A1 a1 = instantiate(A1.class, null, new C1(), new C2());
+			// System.err.println("A1=" + a1);
+			// }
+			//
+			// {
+			// A3 a3 = instantiate(AnayserConfiguratiinA3.class, null);
+			// System.err.println("A3=" + a3);
+			// }
+			//
+			// {
+			// A31Config a31c = new A31Config();
+			// a31c.a41c = new A41Config();
+			// A31 a31 = instantiate(a31c);
+			// System.err.println("A3=" + a31);
+			// }
+			//
+			// {
+			// TypeMappersConfig c = new TypeMappersConfig();
+			// c = c.withTypeMapper(AnalyserConfiguration.of(TM1.class));
+			// c = c.withTypeMapper(new TM2Config());
+			// TMUserConfig tmUserConfig = new TMUserConfig();
+			// tmUserConfig.tmConfig = c;
+			// TMUser user = instantiate(TMUser.class, null, tmUserConfig);
+			// System.err.println("U " + asString(user));
+			// }
 		}
 
 		System.err.println("\ndone\n");
 	}
 
 	private <T> List<T> create(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
-		return create2(anas, class1).stream().map(a -> instantiate(a.getAnalyser().asSubclass(class1), a))
-				.collect(Collectors.toList());
+		return create2(anas, class1).stream().map(a -> instantiate(a)).collect(Collectors.toList());
 	}
 
 	private <T> List<AnalyserConfiguration<T>> create2(List<AnalyserConfiguration<?>> anas, Class<T> class1) {
@@ -484,7 +552,7 @@ public class TMain {
 
 	}
 
-	public static void run(com.github.da.t.AnalysisConfiguration config) {
+	public static void run(com.github.da.t.AnalysisConfiguration config) throws IOException {
 		Stopwatch sw = Stopwatch.createStarted();
 		try (Application a = new ApplicationBuilder() //
 				.with(new ConfigurationExtension(new com.github.da.AnalysisConfiguration()))//

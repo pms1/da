@@ -32,6 +32,7 @@ import org.objectweb.asm.Type;
 
 import com.github.da.JpaClassAnalyser.FieldType;
 import com.github.da.JpaClassAnalyser.TResult;
+import com.github.da.t.RootAnalysis;
 
 import asm.ClassSignature;
 import asm.JavaTypeVisitor;
@@ -39,7 +40,7 @@ import asm.ParameterizedType;
 import asm.RawType;
 import asm.TypeArgument;
 
-public class JpaModelCreatorPhase2 implements PostAnalyser<NoConfiguration> {
+public class JpaModelCreatorPhase2 implements RootAnalysis {
 
 	@Override
 	public void run() {
@@ -65,7 +66,6 @@ public class JpaModelCreatorPhase2 implements PostAnalyser<NoConfiguration> {
 	}
 
 	public void phase2(ClassData bean) {
-
 		JpaAnalysisResult2 result = bean.find(JpaAnalysisResult2.class);
 		if (result == null)
 			return;

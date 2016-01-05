@@ -2,8 +2,10 @@ package com.github.da;
 
 import java.nio.file.Path;
 
-@AnaScope
-public class ClasspathElementScannerConfig extends Analysis<ClasspathElementScannerConfig,ClasspathElementScanner> {
+import com.github.da.t.AnalyserConfiguration;
+
+@Configuration
+public class ClasspathElementScannerConfig extends AnalyserConfiguration<ClasspathElementScanner> {
 	private final Path path;
 
 	public interface Builder {

@@ -1,5 +1,6 @@
 package utils.text;
 
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +17,17 @@ public class Description {
 	private String prefix = "";
 	private StringBuilder text = new StringBuilder();
 
+	private final IdentityHashMap<Object, String> map;
+
+	public Description() {
+		this(new IdentityHashMap<>());
+
+	}
+
+	private Description(IdentityHashMap<Object, String> map) {
+		this.map = map;
+	}
+
 	private void increase() {
 		prefix += indent;
 	}
@@ -25,7 +37,10 @@ public class Description {
 	}
 
 	public Description withValue(String key, Object value) {
-		Description d = new Description();
+		// String old = map.get(value);
+		// if (old != null)
+		// throw new Error();
+		Description d = new Description(map);
 		d.describe(value);
 		appendMultiLine(key + " = ", d.toString());
 		return this;
@@ -36,7 +51,11 @@ public class Description {
 
 		increase();
 		for (int i = 0; i != analyses.size(); ++i) {
-			Description d = new Description();
+			// String old = map.get(analyses.get(i));
+			// if (old != null)
+			// throw new Error();
+
+			Description d = new Description(map);
 			d.describe(analyses.get(i));
 			appendMultiLine("#" + i + ": ", d.toString());
 		}
@@ -65,11 +84,22 @@ public class Description {
 	}
 
 	public Description describe(Object analysis) {
+		String old = map.get(analysis);
+		if (old != null) {
+			text.append(prefix).append(analysis.getClass().getCanonicalName()).append(" (-> ").append(old).append(")")
+					.append(eol);
+			return this;
+		}
 		if (analysis instanceof Describable) {
-			text.append(prefix).append(analysis.getClass().getCanonicalName()).append(eol);
+			String id = "id " + map.size();
+			map.put(analysis, id);
+
+			text.append(prefix).append(analysis.getClass().getCanonicalName()).append(" (").append(id).append(")")
+					.append(eol);
 			increase();
 			((Describable) analysis).describe(this);
 			decrease();
+
 		} else {
 			appendMultiLine("", String.valueOf(analysis));
 		}

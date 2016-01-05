@@ -10,12 +10,13 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.github.da.ClassDataCreatorConfig.Data;
+import com.github.da.t.ClassProcessor;
 
 import asm.ClassSignature;
 import ts.AsmTypeParser;
 
 @Include(ClassProcessor2.class)
-public class ClassDataCreator implements ClassAnalysis<ClassDataCreatorConfig> {
+public class ClassDataCreator implements ClassProcessor {
 
 	@Inject
 	AnalysisResult ar;

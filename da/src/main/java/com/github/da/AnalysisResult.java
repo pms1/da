@@ -6,7 +6,7 @@ import java.util.Objects;
 public class AnalysisResult extends GenericData {
 	final String id;
 
-	AnalysisResult(String id) {
+	public AnalysisResult(String id) {
 		Objects.requireNonNull(id);
 		this.id = id;
 	}

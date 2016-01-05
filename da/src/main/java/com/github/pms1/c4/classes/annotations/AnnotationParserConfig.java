@@ -5,11 +5,13 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.github.da.AnaScope;
+import com.github.da.Configuration;
+import com.github.da.t.AnalyserConfiguration;
 
-@AnaScope
-public class AnnotationParserConfig {
+@Configuration
+public class AnnotationParserConfig extends AnalyserConfiguration<AnnotationParser> {
 	AnnotationParserConfig(Set<String> packages) {
+		super(AnnotationParser.class);
 		Objects.requireNonNull(packages);
 		if (packages.isEmpty())
 			throw new IllegalArgumentException();

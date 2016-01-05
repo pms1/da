@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(TYPE)
 public @interface Include {
-	Class<? extends Analyser<?>>value();
+	Class<?/* extends Analyser<?> */>value();
 }

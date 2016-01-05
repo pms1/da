@@ -32,7 +32,7 @@ import asm.MethodSignature;
 import ts.AsmTypeParser;
 
 @Include(JpaModelCreatorPhase2.class)
-public class JpaModelCreator implements ClassAnalysis<JpaModelCreatorConfig> {
+public class JpaModelCreator implements com.github.da.t.ClassProcessor {
 
 	@Inject
 	AnalysisResult ar;

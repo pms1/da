@@ -245,7 +245,6 @@ public class Ext implements Extension {
 
 		@Override
 		public <T> T get(Contextual<T> contextual) {
-			System.err.println("C " + contextual);
 			if (!beans.contains(contextual) || !isActive())
 				throw new Error("c=" + contextual + " " + current);
 
@@ -440,6 +439,9 @@ public class Ext implements Extension {
 					return elementType;
 				}
 
+				public String toString() {
+					return "AnalyserListBean[" + listType + "]";
+				};
 			});
 		}
 
@@ -671,6 +673,7 @@ public class Ext implements Extension {
 			public Class<?> getTargetClass() {
 				return targetClass;
 			}
+
 		};
 
 	}

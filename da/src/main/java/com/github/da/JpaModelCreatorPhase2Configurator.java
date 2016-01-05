@@ -4,26 +4,29 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.github.da.JpaClassAnalyser.TResult;
+import com.github.da.t.AnalyserConfiguration;
 
 import asm.ClassSignature;
 
-public class JpaModelCreatorPhase2Configurator implements Configurator<NoConfiguration, JpaModelCreatorPhase2> {
+public class JpaModelCreatorPhase2Configurator
+		implements com.github.da.t.Configurator<JpaModelCreatorPhase2, AnalyserConfiguration<JpaModelCreatorPhase2>> {
 
 	@Override
-	public Collection<Object> getRequirements(NoConfiguration config) {
+	public Collection<Object> getRequirements(AnalyserConfiguration<JpaModelCreatorPhase2> config) {
 		return Arrays.asList(TResult.class, ClassSignature.class);
 	}
 
 	@Override
-	public NoConfiguration createConfiguration(Object requirement) {
+	public AnalyserConfiguration<JpaModelCreatorPhase2> createConfiguration(Object requirement) {
 		if (requirement.equals(JpaProperty.class))
-			return NoConfiguration.INSTANCE;
+			return AnalyserConfiguration.of(JpaModelCreatorPhase2.class);
 
 		return null;
 	}
 
 	@Override
-	public NoConfiguration merge(NoConfiguration config1, NoConfiguration config2) {
+	public AnalyserConfiguration<JpaModelCreatorPhase2> merge(AnalyserConfiguration<JpaModelCreatorPhase2> config1,
+			AnalyserConfiguration<JpaModelCreatorPhase2> config2) {
 		return config1;
 	}
 }

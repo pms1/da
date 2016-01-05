@@ -346,7 +346,7 @@ public class CompareH2 {
 
 	}
 
-	static Path findDir(Class<?> c) throws URISyntaxException {
+	public static Path findDir(Class<?> c) throws URISyntaxException {
 		ClassLoader cl = c.getClassLoader();
 
 		URLClassLoader cl1 = (URLClassLoader) cl;

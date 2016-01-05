@@ -29,7 +29,7 @@ import sql.TableModel;
 import sql.types.IntType;
 import sql.types.SqlType;
 
-public class DataModelCreator2 implements PostAnalyser<DataModelCreatorConfig> {
+public class DataModelCreator2 implements com.github.da.t.RootAnalysis {
 	@Inject
 	ClassHierarchy2 ch;
 
@@ -228,7 +228,6 @@ public class DataModelCreator2 implements PostAnalyser<DataModelCreatorConfig> {
 
 					TableModel t1 = TableModel.create(target);
 					idProperties = collection.stream().filter((q) -> q.id).collect(Collectors.toList());
-					System.err.println("CN " + className + " " + target + " " + p.joinColumns + " " + idProperties);
 					t1 = addKeyReference(t1, idProperties, p.joinColumns, (oname) -> {
 						throw new Error();
 					});

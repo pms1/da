@@ -41,11 +41,29 @@ class AnalysersMetadata implements Iterable<AnalyserMetadata<?, ?>> {
 	}
 
 	public <A, C extends AnalyserConfiguration<A>> AnalyserMetadata<A, C> get(AnalyserConfiguration<A> c) {
+		// FIXME: use streams
+		AnalyserMetadata<A, C> result = null;
 		for (AnalyserMetadata<?, ?> a : all) {
-			if (a.analyserClass.equals(c.getAnalyser()) && a.configClass.equals(c.getClass()))
-				return (AnalyserMetadata<A, C>) a;
+			if (a.analyserClass.equals(c.getAnalyser()) && a.configClass.equals(c.getClass())) {
+				if (result != null)
+					throw new Error();
+				result = (AnalyserMetadata<A, C>) a;
+			}
 		}
-		return null;
+		return result;
+	}
+
+	public <A, C extends AnalyserConfiguration<A>> AnalyserMetadata<A, C> get(Class<A> c) {
+		// FIXME: use streams
+		AnalyserMetadata<A, C> result = null;
+		for (AnalyserMetadata<?, ?> a : all) {
+			if (a.analyserClass.equals(c)) {
+				if (result != null)
+					throw new Error();
+				result = (AnalyserMetadata<A, C>) a;
+			}
+		}
+		return result;
 	}
 
 	@Override
