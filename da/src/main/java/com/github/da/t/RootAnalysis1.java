@@ -4,6 +4,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import com.github.da.Analysis;
+import com.github.da.ResourceProcessor;
+
 import utils.text.Describable;
 import utils.text.Description;
 

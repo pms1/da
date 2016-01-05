@@ -4,6 +4,8 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import com.github.da.Configured;
+
 public class A1 {
 	@Inject
 	C1 c1;

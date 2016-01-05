@@ -11,7 +11,7 @@ import com.github.da.MethodData;
 import com.google.common.collect.Sets;
 
 public class AnnotationParserConfigurator
-		implements com.github.da.t.Configurator<AnnotationParser, AnnotationParserConfig> {
+		implements com.github.da.Configurator<AnnotationParser, AnnotationParserConfig> {
 
 	@Override
 	public AnnotationParserConfig createConfiguration(Object requirement) {

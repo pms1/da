@@ -1,4 +1,4 @@
-package com.github.da.t;
+package com.github.da;
 
 public class AnalyserConfiguration<A> {
 	private final Class<A> analyser;

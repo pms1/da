@@ -2,8 +2,6 @@ package com.github.da;
 
 import java.nio.file.Path;
 
-import com.github.da.t.AnalyserConfiguration;
-
 @Configuration
 public class ClasspathElementScannerConfig extends AnalyserConfiguration<ClasspathElementScanner> {
 	private final Path path;

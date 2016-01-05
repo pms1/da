@@ -10,7 +10,6 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.github.da.ClassDataCreatorConfig.Data;
-import com.github.da.t.ClassProcessor;
 
 import asm.ClassSignature;
 import ts.AsmTypeParser;

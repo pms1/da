@@ -13,7 +13,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import com.github.da.t.All;
-import com.github.da.t.ResourceProcessor;
 
 public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 

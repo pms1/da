@@ -3,12 +3,12 @@ package com.github.da.jpa;
 import java.util.Arrays;
 import java.util.Collection;
 
-import com.github.da.t.AnalyserConfiguration;
+import com.github.da.AnalyserConfiguration;
 
 import asm.ClassSignature;
 
 public class JpaModelCreatorPhase2Configurator
-		implements com.github.da.t.Configurator<JpaModelCreatorPhase2, AnalyserConfiguration<JpaModelCreatorPhase2>> {
+		implements com.github.da.Configurator<JpaModelCreatorPhase2, AnalyserConfiguration<JpaModelCreatorPhase2>> {
 
 	@Override
 	public Collection<Object> getRequirements(AnalyserConfiguration<JpaModelCreatorPhase2> config) {

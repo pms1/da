@@ -1,4 +1,4 @@
-package com.github.da.t;
+package com.github.da;
 
 class AnalyserMetadata<A, C extends AnalyserConfiguration<A>> {
 	final Class<A> analyserClass;

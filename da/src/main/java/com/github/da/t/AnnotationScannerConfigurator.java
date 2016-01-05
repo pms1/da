@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.github.da.ClassData;
+import com.github.da.Configurator;
 
 public class AnnotationScannerConfigurator implements Configurator<AnnotationScanner, AnnotationScannerConfig> {
 

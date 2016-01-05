@@ -3,6 +3,7 @@ package com.github.da.t;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.Configuration;
 
 @Configuration

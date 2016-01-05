@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.Configuration;
-import com.github.da.t.AnalyserConfiguration;
 
 @Configuration
 public class AnnotationParserConfig extends AnalyserConfiguration<AnnotationParser> {

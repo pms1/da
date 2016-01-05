@@ -11,8 +11,6 @@ import javax.inject.Provider;
 import org.objectweb.asm.ClassReader;
 
 import com.github.da.t.All;
-import com.github.da.t.ClassProcessor;
-import com.github.da.t.ResourceProcessor;
 
 import utils.text.Describable;
 import utils.text.Description;

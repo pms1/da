@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import com.github.da.t.AnalyserConfiguration;
 import com.google.common.base.Preconditions;
 
 @Configuration

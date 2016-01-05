@@ -1,4 +1,4 @@
-package com.github.da.t;
+package com.github.da;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ public class AnalysisConfiguration {
 	public AnalysisConfiguration() {
 	}
 
-	final List<AnalyserConfiguration<?>> configs = new LinkedList<>();
+	private final List<AnalyserConfiguration<?>> configs = new LinkedList<>();
 
 	public AnalysisConfiguration with(AnalyserConfiguration<?> config) {
 		configs.add(config);
@@ -21,7 +21,7 @@ public class AnalysisConfiguration {
 		return this;
 	}
 
-	List<AnalyserConfiguration<?>> getAnalyserConfigurations() {
+	public List<AnalyserConfiguration<?>> getAnalyserConfigurations() {
 		return new ArrayList<>(configs);
 	}
 }

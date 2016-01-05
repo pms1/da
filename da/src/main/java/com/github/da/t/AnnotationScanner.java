@@ -4,6 +4,8 @@ import javax.inject.Inject;
 
 import org.objectweb.asm.ClassReader;
 
+import com.github.da.ClassProcessor;
+
 import utils.text.Describable;
 import utils.text.Description;
 

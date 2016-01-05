@@ -3,6 +3,9 @@ package com.github.da.t;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.github.da.AnalyserConfiguration;
+import com.github.da.Configurator;
+
 public class JpaAnalysis2Configurator implements Configurator<JpaAnalysis2, AnalyserConfiguration<JpaAnalysis2>> {
 
 	@Override

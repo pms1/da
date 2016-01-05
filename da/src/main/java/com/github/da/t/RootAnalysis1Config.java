@@ -2,6 +2,7 @@ package com.github.da.t;
 
 import java.nio.file.Path;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.Configuration;
 
 @Configuration

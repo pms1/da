@@ -1,7 +1,7 @@
 package com.github.da.jpa;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.Configuration;
-import com.github.da.t.AnalyserConfiguration;
 
 @Configuration
 public class JpaModelCreatorConfig extends AnalyserConfiguration<JpaModelCreator> {

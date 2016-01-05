@@ -26,13 +26,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
+import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
+import com.github.da.TMain;
 import com.github.da.jpa.HibernateH2TypeMapper;
 import com.github.da.jpa.HibernateTypeMapper2;
-import com.github.da.t.AnalysisConfiguration;
-import com.github.da.t.TMain;
 
 import sql.ColumnId;
 import sql.ColumnModel;

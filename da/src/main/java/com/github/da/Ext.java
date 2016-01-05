@@ -39,8 +39,6 @@ import javax.inject.Inject;
 import javax.inject.Qualifier;
 
 import com.github.da.t.All;
-import com.github.da.t.AnalyserConfiguration;
-import com.github.da.t.Configured;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -199,7 +197,7 @@ public class Ext implements Extension {
 
 		@Override
 		public Class<? extends Annotation> getScope() {
-			return com.github.da.t.Analysis.class;
+			return com.github.da.Analysis.class;
 		}
 
 		@Override
@@ -367,7 +365,7 @@ public class Ext implements Extension {
 	};
 
 	private <X> void vetoOurScopeTypes(@Observes ProcessAnnotatedType<X> pat) {
-		if (pat.getAnnotatedType().isAnnotationPresent(com.github.da.t.Analysis.class)) {
+		if (pat.getAnnotatedType().isAnnotationPresent(com.github.da.Analysis.class)) {
 			Class elementType = (Class) pat.getAnnotatedType().getBaseType();
 			Type listType = listOf(TypeToken.of(elementType)).getType();
 

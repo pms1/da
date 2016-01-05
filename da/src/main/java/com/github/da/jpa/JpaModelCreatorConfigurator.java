@@ -7,7 +7,7 @@ import com.github.da.ClassHierarchy;
 import com.github.pms1.c4.classes.annotations.AnnotationScannerRequirement;
 
 public class JpaModelCreatorConfigurator
-		implements com.github.da.t.Configurator<JpaModelCreator, JpaModelCreatorConfig> {
+		implements com.github.da.Configurator<JpaModelCreator, JpaModelCreatorConfig> {
 
 	static Collection<Object> reqs = Arrays.asList(ClassHierarchy.class,
 			new AnnotationScannerRequirement("javax.persistence"));

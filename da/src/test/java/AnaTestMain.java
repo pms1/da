@@ -3,15 +3,15 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
 import com.github.da.JarScannerConfig;
+import com.github.da.TMain;
 import com.github.da.jpa.HibernateDB2TypeMapper;
 import com.github.da.jpa.HibernateTypeMapper2;
 import com.github.da.jpa.JpaModelCreatorConfig;
-import com.github.da.t.AnalysisConfiguration;
-import com.github.da.t.TMain;
 import com.google.common.base.Stopwatch;
 
 import da.Bottom1;
@@ -34,13 +34,13 @@ public class AnaTestMain {
 				.withTypeMapper(HibernateTypeMapper2.class)//
 				.build();
 
-		com.github.da.t.AnalysisConfiguration ac = new com.github.da.t.AnalysisConfiguration() //
+		com.github.da.AnalysisConfiguration ac = new com.github.da.AnalysisConfiguration() //
 				.with(ClasspathElementScannerConfig.newBuilder().withPath(CompareH2.findDir(Bottom1.class)).build()) //
 				.with(dbmodelGen);
 
 		TMain.run(ac);
 
-		ac = new com.github.da.t.AnalysisConfiguration() //
+		ac = new com.github.da.AnalysisConfiguration() //
 				.with(JarScannerConfig.newBuilder().withPath(zip).build()) //
 				.with(dbmodelGen);
 

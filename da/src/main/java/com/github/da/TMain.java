@@ -1,4 +1,4 @@
-package com.github.da.t;
+package com.github.da;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -26,9 +26,6 @@ import javax.inject.Inject;
 
 import org.jboss.weld.injection.FieldInjectionPoint;
 
-import com.github.da.AnalysisResult;
-import com.github.da.Configuration;
-import com.github.da.Ext;
 import com.github.da.Ext.AnalyserConfigurationBean;
 import com.github.da.Ext.AnalyserListBean;
 import com.github.da.Ext.AnalyserListConfigurationBean;
@@ -37,7 +34,11 @@ import com.github.da.Ext.CC1;
 import com.github.da.Ext.ConfigurationBean;
 import com.github.da.Ext.ConfigurationBeanVisitor;
 import com.github.da.Ext.ConfigurationConfigurationBean;
-import com.github.da.Include;
+import com.github.da.t.A2;
+import com.github.da.t.A2Config;
+import com.github.da.t.RootAnalysis;
+import com.github.da.t.TypeMappers;
+import com.github.da.t.TypeMappersConfig;
 import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
 import com.google.common.base.Stopwatch;
@@ -404,7 +405,7 @@ public class TMain {
 		System.err.println(analysersMetadata.toString());
 
 		r = new Resolver();
-		for (AnalyserConfiguration<?> c : config.configs)
+		for (AnalyserConfiguration<?> c : config.getAnalyserConfigurations())
 			r.addAnalyserConfiguration(c);
 
 		r.finish();

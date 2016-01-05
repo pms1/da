@@ -8,7 +8,6 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.inject.Inject;
 
 import com.github.da.Ext.CC;
-import com.github.da.t.AnalysisConfiguration;
 import com.github.naf.Application;
 import com.github.naf.ApplicationBuilder;
 import com.google.common.collect.Iterables;

@@ -13,8 +13,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 import com.github.da.t.All;
-import com.github.da.t.Analysis;
-import com.github.da.t.ResourceProcessor;
 import com.google.common.io.ByteStreams;
 
 import utils.text.Describable;

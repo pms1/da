@@ -13,15 +13,16 @@ import javax.inject.Inject;
 
 import org.junit.Test;
 
+import com.github.da.AnalyserConfiguration;
+import com.github.da.Analysis;
+import com.github.da.AnalysisConfiguration;
 import com.github.da.ClassResourceProcessor;
+import com.github.da.Configurator;
 import com.github.da.Include;
 import com.github.da.JarResourceProcessor;
+import com.github.da.TMain;
 import com.github.da.t.All;
-import com.github.da.t.AnalyserConfiguration;
-import com.github.da.t.Analysis;
-import com.github.da.t.AnalysisConfiguration;
 import com.github.da.t.AnnotationScannerConfig;
-import com.github.da.t.Configurator;
 import com.github.da.t.JpaAnalysis;
 import com.github.da.t.JpaAnalysis2;
 import com.github.da.t.JpaAnalysis3;
@@ -29,7 +30,6 @@ import com.github.da.t.RootAnalysis;
 import com.github.da.t.RootAnalysis1Config;
 import com.github.da.t.RootAnalysis2Config;
 import com.github.da.t.RootAnalysis3;
-import com.github.da.t.TMain;
 
 public class TMainTest {
 

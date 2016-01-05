@@ -2,6 +2,8 @@ package com.github.da.t;
 
 import javax.inject.Inject;
 
+import com.github.da.Configured;
+
 public class A31 {
 	@Inject
 	@Configured

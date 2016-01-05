@@ -17,7 +17,7 @@ import com.github.da.ClassHierarchy;
 import com.github.pms1.asm.annotation.AnnotationBuilder;
 import com.github.pms1.asm.annotation.AnnotationData;
 
-public class AnnotationParser implements com.github.da.t.ClassProcessor {
+public class AnnotationParser implements com.github.da.ClassProcessor {
 
 	@Inject
 	AnalysisResult ar;

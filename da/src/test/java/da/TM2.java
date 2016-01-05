@@ -3,9 +3,9 @@ package da;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import com.github.da.AnalysisConfiguration;
 import com.github.da.JarScannerConfig;
-import com.github.da.t.AnalysisConfiguration;
-import com.github.da.t.TMain;
+import com.github.da.TMain;
 
 public class TM2 {
 	public static void main(String[] args) throws IOException {
