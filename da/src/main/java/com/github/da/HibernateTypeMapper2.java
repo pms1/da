@@ -136,9 +136,4 @@ public class HibernateTypeMapper2 implements TypeMapper {
 			}
 		});
 	}
-
-	@Override
-	public SqlType map(ClassHierarchy ch, JpaProperty p) {
-		throw new Error();
-	}
 }

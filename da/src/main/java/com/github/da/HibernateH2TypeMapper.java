@@ -11,7 +11,7 @@ import sql.types.TinyIntType;
 public class HibernateH2TypeMapper implements TypeMapper {
 
 	@Override
-	public SqlType map(ClassHierarchy ch, JpaProperty p) {
+	public SqlType map(ClassHierarchy2 ch, JpaProperty p) {
 		return p.type2.accept(new JavaTypeVisitor<SqlType>() {
 
 			@Override

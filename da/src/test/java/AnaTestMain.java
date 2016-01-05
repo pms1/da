@@ -23,7 +23,6 @@ public class AnaTestMain {
 
 		// dc.p = Paths.get(
 		// "C:/Users/Mirko/.m2/repository/org/wildfly/swarm/examples/wildfly-swarm-example-jaxrs-cdi/1.0.0.Alpha02-SNAPSHOT/wildfly-swarm-example-jaxrs-cdi-1.0.0.Alpha02-SNAPSHOT-swarm.jar");
-		// dc.p = Paths.get("c:/temp/ears.zip");
 
 		Path zip = Paths.get(System.getProperty("user.home")).resolve("ears.zip");
 

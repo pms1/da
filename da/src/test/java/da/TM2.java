@@ -10,7 +10,8 @@ import com.github.da.t.TMain;
 public class TM2 {
 	public static void main(String[] args) throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
-		config.with(JarScannerConfig.newBuilder().withPath(Paths.get("c:/temp/ears.zip")).build());
+		config.with(JarScannerConfig.newBuilder()
+				.withPath(Paths.get(System.getProperty("user.home")).resolve("ears.zip")).build());
 
 		TMain.run(config);
 	}

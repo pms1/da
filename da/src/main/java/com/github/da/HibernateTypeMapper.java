@@ -1,7 +1,10 @@
 package com.github.da;
 
+import java.util.Objects;
+
 import asm.ArrayType;
 import asm.BaseType;
+import asm.ClassSignature;
 import asm.JavaType;
 import asm.JavaTypeVisitor;
 import asm.RawType;
@@ -22,7 +25,10 @@ import sql.types.VarcharType;
 public class HibernateTypeMapper implements TypeMapper {
 
 	@Override
-	public SqlType map(ClassHierarchy ch, JpaProperty p) {
+	public SqlType map(ClassHierarchy2 ch, JpaProperty p) {
+		Objects.requireNonNull(ch);
+		Objects.requireNonNull(p);
+
 		return p.type2.accept(new JavaTypeVisitor<SqlType>() {
 
 			@Override
@@ -115,8 +121,9 @@ public class HibernateTypeMapper implements TypeMapper {
 				} else if (rawType.getRawType().equals(JodaTypes.orgJodaTimeLocalTime)) {
 					return TimeType.create();
 				} else {
-					ClassModel classModel = ch.get(rawType.getRawType());
-					if (classModel != null && classModel.getSuperType().getRawType().equals(JreTypes.javaLangEnum)) {
+					ClassData classModel = ch.get(rawType.getRawType());
+					if (classModel != null && classModel.get(ClassSignature.class).getSuperclass().getRawType()
+							.equals(JreTypes.javaLangEnum)) {
 						if (p.enumType == null || p.enumType == JpaEnumType.ORDINAL)
 							return IntType.create();
 						else
