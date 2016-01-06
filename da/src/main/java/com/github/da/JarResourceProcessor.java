@@ -26,7 +26,7 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 	List<ResourceProcessor> procs;
 
 	@Override
-	public void run(Path p, Provider<InputStream> is) throws IOException {
+	public void run(ClasspathUnit cu, Path p, Provider<InputStream> is) throws IOException {
 		if (!p.getFileName().toString().endsWith(".jar") //
 				&& !p.getFileName().toString().endsWith(".war") //
 				&& !p.getFileName().toString().endsWith(".ear") //
@@ -67,7 +67,7 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 			};
 
 			for (ResourceProcessor x : procs) {
-				x.run(Paths.get(e.getName()), pp);
+				x.run(cu, Paths.get(e.getName()), pp);
 			}
 		}
 	}

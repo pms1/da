@@ -34,13 +34,16 @@ public class AnaTestMain {
 				.withTypeMapper(HibernateTypeMapper2.class)//
 				.build();
 
-		com.github.da.AnalysisConfiguration ac = new com.github.da.AnalysisConfiguration() //
-				.with(ClasspathElementScannerConfig.newBuilder().withPath(CompareH2.findDir(Bottom1.class)).build()) //
-				.with(dbmodelGen);
+		AnalysisConfiguration ac;
+		if (false) {
+			ac = new AnalysisConfiguration() //
+					.with(ClasspathElementScannerConfig.newBuilder().withPath(CompareH2.findDir(Bottom1.class)).build()) //
+					.with(dbmodelGen);
 
-		TMain.run(ac);
+			TMain.run(ac);
+		}
 
-		ac = new com.github.da.AnalysisConfiguration() //
+		ac = new AnalysisConfiguration() //
 				.with(JarScannerConfig.newBuilder().withPath(zip).build()) //
 				.with(dbmodelGen);
 

@@ -9,6 +9,6 @@ import javax.inject.Provider;
 @Analysis
 public interface ResourceProcessor {
 
-	void run(Path file, Provider<InputStream> pp) throws IOException;
+	void run(ClasspathUnit cu, Path file, Provider<InputStream> pp) throws IOException;
 
 }

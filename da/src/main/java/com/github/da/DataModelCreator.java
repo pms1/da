@@ -36,7 +36,6 @@ import sql.types.IntType;
 import sql.types.SqlType;
 
 public class DataModelCreator implements com.github.da.t.RootAnalysis {
-	@Inject
 	ClassHierarchy ch;
 
 	@Inject
@@ -340,6 +339,9 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 
 	public void run() {
 
+		DeploymentArtifacts da = ar.get(DeploymentArtifacts.class);
+		ch = da.cu.get(ClassHierarchy.class);
+
 		dm = DatabaseModel.create();
 
 		for (ClassData c : ch.getClasses()) {
@@ -353,6 +355,9 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 			TableId t = createTableId(r);
 
 			TableModel tableModel = TableModel.create(t);
+			System.err.println("1 " + r.clazz);
+			System.err.println("2 " + r.properties);
+			System.err.println("3 " + r.clazz.get(Type.class));
 			tableModel = addColumns(tableModel, r.clazz.get(Type.class).getClassName(), r.properties.values());
 			updateTable(tableModel);
 		}

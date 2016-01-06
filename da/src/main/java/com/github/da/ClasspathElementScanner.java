@@ -23,8 +23,12 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 	@All
 	List<ResourceProcessor> proc;
 
+	@Inject
+	AnalysisResult ar;
+
 	@Override
 	public void run() throws IOException {
+		ClasspathUnit cu = new ClasspathUnit();
 
 		Files.walkFileTree(config.getPath(), new SimpleFileVisitor<Path>() {
 			@Override
@@ -43,14 +47,16 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 
 				};
 
-				System.err.println("XXXX " + file);
 				for (ResourceProcessor i : proc)
-					i.run(file, pp);
+					i.run(cu, config.getPath().relativize(file), pp);
 
-				// TODO Auto-generated method stub
 				return super.visitFile(file, attrs);
 			}
 		});
+
+		DeploymentArtifacts da = new DeploymentArtifacts();
+		da.cu = cu;
+		ar.put(DeploymentArtifacts.class, da);
 	}
 
 }

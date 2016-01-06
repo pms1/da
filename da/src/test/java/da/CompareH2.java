@@ -44,10 +44,11 @@ import sql.TableModel;
 public class CompareH2 {
 	public static void main(String[] args) throws URISyntaxException, IOException {
 		try {
+			DatabaseModel hib = MyPUH2.Holder.dm;
+
 			Class<?> c = Bottom1.class;
 			Path p = findDir(c);
 			AnalysisConfiguration config = new AnalysisConfiguration();
-			config = config.with(ClasspathElementScannerConfig.newBuilder().withPath(p).build());
 			config = config.withAnalysis(ClasspathElementScannerConfig.newBuilder() //
 					.withPath(p) //
 					.build());
@@ -58,8 +59,6 @@ public class CompareH2 {
 			config = config.withAnalysis(dbmodelGen);
 			AnalysisResult ar = TMain.run(config);
 			DatabaseModel dm = ar.get(DatabaseModel.class);
-
-			DatabaseModel hib = MyPUH2.Holder.dm;
 
 			Comparator c1 = new Comparator("hib", i -> {
 				if (i.getSchema().equals(SchemaId.create("PUBLIC")))

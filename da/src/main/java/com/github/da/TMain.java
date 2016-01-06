@@ -37,6 +37,8 @@ import com.github.da.Ext.ConfigurationConfigurationBean;
 import com.github.da.t.A2;
 import com.github.da.t.A2Config;
 import com.github.da.t.RootAnalysis;
+import com.github.da.t.TM1;
+import com.github.da.t.TM2Config;
 import com.github.da.t.TypeMappers;
 import com.github.da.t.TypeMappersConfig;
 import com.github.naf.Application;
@@ -214,11 +216,15 @@ public class TMain {
 				});
 			}
 
-			T result = i.select(config.getAnalyser()).get();
+			try {
+				T result = i.select(config.getAnalyser()).get();
 
-			inCreation.remove(config).forEach((c) -> c.accept(result));
+				inCreation.remove(config).forEach((c) -> c.accept(result));
 
-			return result;
+				return result;
+			} catch (RuntimeException e) {
+				throw new RuntimeException("Creating instance of " + config.getAnalyser() + " failed: " + e, e);
+			}
 		} finally {
 			cc1.deactivate();
 		}
@@ -437,7 +443,7 @@ public class TMain {
 		// cc1.bind(C2.class, new C2());
 		// A a = i.select(A1.class).get();
 
-		if (false) {
+		if (true) {
 			{
 				A2 a2 = instantiate(new A2Config());
 				System.err.println("A2=" + a2);
@@ -467,15 +473,15 @@ public class TMain {
 			// System.err.println("A3=" + a31);
 			// }
 			//
-			// {
-			// TypeMappersConfig c = new TypeMappersConfig();
-			// c = c.withTypeMapper(AnalyserConfiguration.of(TM1.class));
-			// c = c.withTypeMapper(new TM2Config());
-			// TMUserConfig tmUserConfig = new TMUserConfig();
-			// tmUserConfig.tmConfig = c;
-			// TMUser user = instantiate(TMUser.class, null, tmUserConfig);
-			// System.err.println("U " + asString(user));
-			// }
+			{
+				TypeMappersConfig c = new TypeMappersConfig();
+				c = c.withTypeMapper(AnalyserConfiguration.of(TM1.class));
+				c = c.withTypeMapper(new TM2Config());
+				TMUserConfig tmUserConfig = new TMUserConfig();
+				tmUserConfig.tmConfig = c;
+				TMUser user = instantiate(tmUserConfig);
+				System.err.println("U " + asString(user));
+			}
 		}
 
 		System.err.println("\ndone\n");

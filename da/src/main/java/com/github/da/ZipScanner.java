@@ -24,12 +24,16 @@ public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 	@Inject
 	JarScannerConfig config;
 
+	@Inject
+	AnalysisResult ar;
+
 	@Override
 	public void run() throws IOException {
 
 		JarResourceProcessor jpp = Iterables.getOnlyElement(jpps);
 
-		jpp.run(config.getPath(), new Provider<InputStream>() {
+		ClasspathUnit cu = new ClasspathUnit();
+		jpp.run(cu, config.getPath(), new Provider<InputStream>() {
 
 			@Override
 			public InputStream get() {
@@ -41,6 +45,11 @@ public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 			}
 
 		});
+
+		DeploymentArtifacts da = new DeploymentArtifacts();
+		da.cu = cu;
+		ar.put(DeploymentArtifacts.class, da);
+
 	}
 
 	@Override

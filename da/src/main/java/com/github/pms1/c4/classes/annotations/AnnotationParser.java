@@ -14,6 +14,7 @@ import com.github.da.AnalysisResult;
 import com.github.da.AsmIds;
 import com.github.da.ClassData;
 import com.github.da.ClassHierarchy;
+import com.github.da.ClasspathUnit;
 import com.github.pms1.asm.annotation.AnnotationBuilder;
 import com.github.pms1.asm.annotation.AnnotationData;
 
@@ -26,8 +27,8 @@ public class AnnotationParser implements com.github.da.ClassProcessor {
 	AnnotationParserConfig config;
 
 	@Override
-	public void run(ClassReader v) {
-		ClassHierarchy ch = ar.get(ClassHierarchy.class);
+	public void run(ClasspathUnit cu, ClassReader v) {
+		ClassHierarchy ch = cu.get(ClassHierarchy.class);
 
 		v.accept(new ClassVisitor(Opcodes.ASM5) {
 

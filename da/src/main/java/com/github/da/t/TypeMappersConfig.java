@@ -9,11 +9,11 @@ import com.github.da.Configuration;
 @Configuration
 public class TypeMappersConfig extends AnalyserConfiguration<TypeMappers> {
 
-	TypeMappersConfig() {
+	public TypeMappersConfig() {
 		super(TypeMappers.class);
 	}
 
-	TypeMappersConfig withTypeMapper(AnalyserConfiguration<? extends TypeMapper> config) {
+	public TypeMappersConfig withTypeMapper(AnalyserConfiguration<? extends TypeMapper> config) {
 		if (this.configs == null)
 			this.configs = new LinkedList<>();
 		this.configs.add(config);

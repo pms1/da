@@ -17,8 +17,11 @@ import static com.github.da.JreTypes.javaSqlDate;
 import static com.github.da.JreTypes.javaSqlTime;
 import static com.github.da.JreTypes.javaUtilDate;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -30,8 +33,10 @@ import javax.inject.Inject;
 
 import org.objectweb.asm.Type;
 
+import com.github.da.AnalysisResult;
 import com.github.da.ClassData;
 import com.github.da.ClassHierarchy;
+import com.github.da.DeploymentArtifacts;
 import com.github.da.JpaAccess;
 import com.github.da.TypeUtil;
 import com.github.da.t.RootAnalysis;
@@ -44,13 +49,39 @@ import asm.TypeArgument;
 
 public class JpaModelCreatorPhase2 implements RootAnalysis {
 
+	@Inject
+	AnalysisResult ar;
+
 	@Override
 	public void run() {
-		for (ClassData cd : ch.getClasses())
-			phase2(cd);
+		DeploymentArtifacts da = ar.get(DeploymentArtifacts.class);
+
+		List<PersistenceUnit> resultUnits = new LinkedList<>();
+
+		Collection<PersistenceXmlUnits> all = da.cu.getAll(PersistenceXmlUnits.class);
+		for (PersistenceXmlUnits units : all) {
+			for (PersistenceXmlUnit unit : units.getUnits()) {
+				if (unit.excludeUnlistedClasses) {
+					throw new UnsupportedOperationException();
+				} else {
+
+					ch = da.cu.get(ClassHierarchy.class);
+
+					Map<ClassData, JpaAnalysisResult2> result = new HashMap<>();
+
+					for (ClassData cd : ch.getClasses()) {
+						phase2(cd);
+						result.put(cd, cd.get(JpaAnalysisResult2.class));
+					}
+
+					resultUnits.add(new PersistenceUnit(result));
+				}
+			}
+		}
+
+		da.cu.put(PersistenceUnits.class, new PersistenceUnits(resultUnits));
 	}
 
-	@Inject
 	ClassHierarchy ch;
 
 	boolean findId(ClassData t, Function<TResult, Map<String, ? extends JpaProperty>> e) {

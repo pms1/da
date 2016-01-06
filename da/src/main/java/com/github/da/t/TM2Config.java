@@ -6,7 +6,7 @@ import com.github.da.Configuration;
 @Configuration
 public class TM2Config extends AnalyserConfiguration<TM2> {
 
-	TM2Config() {
+	public TM2Config() {
 		super(TM2.class);
 	}
 

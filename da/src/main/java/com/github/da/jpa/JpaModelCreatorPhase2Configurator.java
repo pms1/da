@@ -12,12 +12,12 @@ public class JpaModelCreatorPhase2Configurator
 
 	@Override
 	public Collection<Object> getRequirements(AnalyserConfiguration<JpaModelCreatorPhase2> config) {
-		return Arrays.asList(TResult.class, ClassSignature.class);
+		return Arrays.asList(TResult.class, ClassSignature.class, PersistenceXmlUnits.class);
 	}
 
 	@Override
 	public AnalyserConfiguration<JpaModelCreatorPhase2> createConfiguration(Object requirement) {
-		if (requirement.equals(JpaProperty.class))
+		if (requirement.equals(PersistenceUnits.class))
 			return AnalyserConfiguration.of(JpaModelCreatorPhase2.class);
 
 		return null;
