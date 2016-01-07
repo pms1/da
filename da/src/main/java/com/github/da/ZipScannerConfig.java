@@ -3,21 +3,21 @@ package com.github.da;
 import java.nio.file.Path;
 
 @Configuration
-public class JarScannerConfig extends AnalyserConfiguration<JarScanner> {
+public class ZipScannerConfig extends AnalyserConfiguration<ZipScanner> {
 	private final Path path;
 
 	public interface Builder {
 		Builder withPath(Path p);
 
-		JarScannerConfig build();
+		ZipScannerConfig build();
 	}
 
 	private static class BuilderImpl implements Builder {
 		Path p;
 
 		@Override
-		public JarScannerConfig build() {
-			return new JarScannerConfig(p);
+		public ZipScannerConfig build() {
+			return new ZipScannerConfig(p);
 		}
 
 		@Override
@@ -28,8 +28,8 @@ public class JarScannerConfig extends AnalyserConfiguration<JarScanner> {
 
 	}
 
-	public JarScannerConfig(Path path) {
-		super(JarScanner.class);
+	public ZipScannerConfig(Path path) {
+		super(ZipScanner.class);
 		this.path = path;
 	}
 

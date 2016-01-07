@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.inject.Provider;
 import javax.xml.bind.JAXBContext;
@@ -16,7 +18,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 
-import com.github.da.ClasspathUnit;
+import com.github.da.Archive;
+import com.github.da.ResourceId;
 import com.github.da.ResourceProcessor;
 
 public class PersistenceXmlParser implements ResourceProcessor {
@@ -41,7 +44,7 @@ public class PersistenceXmlParser implements ResourceProcessor {
 	}
 
 	@Override
-	public void run(ClasspathUnit cu, Path file, Provider<InputStream> pp) throws IOException {
+	public void run(Supplier<ResourceId> id, Archive parent, Path file, Provider<InputStream> data) throws IOException {
 		if (!file.equals(persistenceXml))
 			return;
 
@@ -50,28 +53,28 @@ public class PersistenceXmlParser implements ResourceProcessor {
 
 		try {
 			DocumentBuilder documentBuilder = factory.newDocumentBuilder();
-			Document parse = documentBuilder.parse(pp.get());
+			Document parse = documentBuilder.parse(data.get());
 			String version = parse.getDocumentElement().getAttribute("version");
 
 			PersistenceXmlUnits pu;
 			switch (version) {
 			case "2.0":
-				pu = parse_2_0(cu, parse);
+				pu = parse_2_0(parent, parse);
 				break;
 			case "2.1":
-				pu = parse_2_1(cu, parse);
+				pu = parse_2_1(parent, parse);
 				break;
 			default:
 				throw new Error("unhandled jpa version: " + version);
 			}
 
-			cu.put(PersistenceXmlUnits.class, pu);
+			parent.put(PersistenceXmlUnits.class, pu);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private PersistenceXmlUnits parse_2_0(ClasspathUnit cu, Document parse) throws JAXBException {
+	private PersistenceXmlUnits parse_2_0(Archive cu, Document parse) throws JAXBException {
 		Unmarshaller u = jaxbContext_2_0.createUnmarshaller();
 		com.github.da.jpa.model.persistence_2_0.Persistence c = u
 				.unmarshal(parse, com.github.da.jpa.model.persistence_2_0.Persistence.class).getValue();
@@ -93,12 +96,12 @@ public class PersistenceXmlParser implements ResourceProcessor {
 			else
 				isExcludeUnlistedClasses = false;
 
-			result.add(new PersistenceXmlUnit(isExcludeUnlistedClasses));
+			result.add(new PersistenceXmlUnit(new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses));
 		}
 		return new PersistenceXmlUnits(result);
 	}
 
-	private PersistenceXmlUnits parse_2_1(ClasspathUnit cu, Document parse) throws JAXBException {
+	private PersistenceXmlUnits parse_2_1(Archive cu, Document parse) throws JAXBException {
 		Unmarshaller u = jaxbContext_2_1.createUnmarshaller();
 		com.github.da.jpa.model.persistence_2_1.Persistence c = u
 				.unmarshal(parse, com.github.da.jpa.model.persistence_2_1.Persistence.class).getValue();
@@ -121,7 +124,7 @@ public class PersistenceXmlParser implements ResourceProcessor {
 			else
 				isExcludeUnlistedClasses = false;
 
-			result.add(new PersistenceXmlUnit(isExcludeUnlistedClasses));
+			result.add(new PersistenceXmlUnit(new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses));
 		}
 		return new PersistenceXmlUnits(result);
 	}

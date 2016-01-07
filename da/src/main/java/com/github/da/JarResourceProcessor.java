@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -26,12 +27,17 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 	List<ResourceProcessor> procs;
 
 	@Override
-	public void run(ClasspathUnit cu, Path p, Provider<InputStream> is) throws IOException {
-		if (!p.getFileName().toString().endsWith(".jar") //
-				&& !p.getFileName().toString().endsWith(".war") //
-				&& !p.getFileName().toString().endsWith(".ear") //
-				&& !p.getFileName().toString().endsWith(".zip") //
-		)
+	public void run(Supplier<ResourceId> id, Archive parent, Path p, Provider<InputStream> is) throws IOException {
+		Archive cu;
+		if (p.getFileName().toString().endsWith(".ear"))
+			cu = new EnterpriseArchive();
+		else if (p.getFileName().toString().endsWith(".war"))
+			cu = new WebArchive(id.get());
+		else if (p.getFileName().toString().endsWith(".jar"))
+			cu = new JavaArchive(id.get());
+		else if (p.getFileName().toString().endsWith(".zip"))
+			cu = new ZipArchive();
+		else
 			return;
 
 		ZipInputStream zis = new ZipInputStream(is.get());
@@ -66,10 +72,12 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 
 			};
 
-			for (ResourceProcessor x : procs) {
-				x.run(cu, Paths.get(e.getName()), pp);
-			}
+			Path p1 = Paths.get(e.getName());
+			for (ResourceProcessor x : procs)
+				x.run(Lazy.of(() -> ResourceId.create(id.get(), p1)), cu, p1, pp);
 		}
+
+		parent.add(cu);
 	}
 
 	@Override

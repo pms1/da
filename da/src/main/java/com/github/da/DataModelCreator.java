@@ -22,7 +22,10 @@ import com.github.da.jpa.JoinColumnAnnotation;
 import com.github.da.jpa.JoinTableAnnotation;
 import com.github.da.jpa.JpaAnalysisResult2;
 import com.github.da.jpa.JpaProperty;
+import com.github.da.jpa.PersistenceUnit;
+import com.github.da.jpa.PersistenceUnits;
 import com.github.da.jpa.TableAnnotation;
+import com.github.da.jpa.TypeMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 
@@ -36,7 +39,7 @@ import sql.types.IntType;
 import sql.types.SqlType;
 
 public class DataModelCreator implements com.github.da.t.RootAnalysis {
-	ClassHierarchy ch;
+	ClassLoader ch;
 
 	@Inject
 	Resolver resolve;
@@ -339,28 +342,33 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 
 	public void run() {
 
-		DeploymentArtifacts da = ar.get(DeploymentArtifacts.class);
-		ch = da.cu.get(ClassHierarchy.class);
-
 		dm = DatabaseModel.create();
 
-		for (ClassData c : ch.getClasses()) {
-			JpaAnalysisResult2 r = c.get(JpaAnalysisResult2.class);
-			if (r == null)
-				continue;
+		for (Archive a : ar.get(DeploymentArtifacts.class)) {
+			PersistenceUnits pus = a.get(PersistenceUnits.class);
+			for (PersistenceUnit pu : pus) {
 
-			if (!r.isEntity())
-				continue;
+				ch = a.getClassLoader();
+				for (ClassData c : pu.data.keySet()) {
+					JpaAnalysisResult2 r = c.get(JpaAnalysisResult2.class);
+					if (r == null)
+						continue;
 
-			TableId t = createTableId(r);
+					if (!r.isEntity())
+						continue;
 
-			TableModel tableModel = TableModel.create(t);
-			System.err.println("1 " + r.clazz);
-			System.err.println("2 " + r.properties);
-			System.err.println("3 " + r.clazz.get(Type.class));
-			tableModel = addColumns(tableModel, r.clazz.get(Type.class).getClassName(), r.properties.values());
-			updateTable(tableModel);
+					TableId t = createTableId(r);
+
+					TableModel tableModel = TableModel.create(t);
+					System.err.println("1 " + r.clazz);
+					System.err.println("2 " + r.properties);
+					System.err.println("3 " + r.clazz.get(Type.class));
+					tableModel = addColumns(tableModel, r.clazz.get(Type.class).getClassName(), r.properties.values());
+					updateTable(tableModel);
+				}
+			}
 		}
+		ch = null; // da.cu.get(ClassHierarchy.class);
 
 		ar.put(DatabaseModel.class, dm);
 	}

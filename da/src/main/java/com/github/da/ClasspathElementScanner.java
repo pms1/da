@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -28,7 +29,7 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 
 	@Override
 	public void run() throws IOException {
-		ClasspathUnit cu = new ClasspathUnit();
+		Archive archive = new DirectoryArchive();
 
 		Files.walkFileTree(config.getPath(), new SimpleFileVisitor<Path>() {
 			@Override
@@ -48,15 +49,14 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 				};
 
 				for (ResourceProcessor i : proc)
-					i.run(cu, config.getPath().relativize(file), pp);
+					i.run(Lazy.of(() -> ResourceId.create(ResourceId.create(config.getPath()), file)), archive,
+							config.getPath().relativize(file), pp);
 
 				return super.visitFile(file, attrs);
 			}
 		});
 
-		DeploymentArtifacts da = new DeploymentArtifacts();
-		da.cu = cu;
-		ar.put(DeploymentArtifacts.class, da);
+		ar.put(DeploymentArtifacts.class, new DeploymentArtifacts(Collections.singletonList(archive)));
 	}
 
 }

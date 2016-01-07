@@ -3,7 +3,9 @@ package com.github.da;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -15,14 +17,14 @@ import utils.text.Describable;
 import utils.text.Description;
 
 @Include(JarResourceProcessor.class)
-public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
+public class ZipScanner implements com.github.da.t.RootAnalysis, Describable {
 
 	@Inject
 	@All
 	List<JarResourceProcessor> jpps;
 
 	@Inject
-	JarScannerConfig config;
+	ZipScannerConfig config;
 
 	@Inject
 	AnalysisResult ar;
@@ -32,8 +34,32 @@ public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 
 		JarResourceProcessor jpp = Iterables.getOnlyElement(jpps);
 
-		ClasspathUnit cu = new ClasspathUnit();
-		jpp.run(cu, config.getPath(), new Provider<InputStream>() {
+		List<Archive> archives = new LinkedList<>();
+
+		Archive cu = new Archive() {
+
+			@Override
+			public <T> void put(Class<T> class1, T data1) {
+				throw new Error();
+			}
+
+			@Override
+			protected <T> void put(Class<T> class1, Supplier<T> t) {
+				throw new Error();
+			}
+
+			@Override
+			public void add(Archive cu) {
+				archives.add(cu);
+			}
+
+			@Override
+			public ClassLoader getClassLoader() {
+				throw new Error();
+			}
+		};
+
+		jpp.run(Lazy.of(() -> ResourceId.create(config.getPath())), cu, config.getPath(), new Provider<InputStream>() {
 
 			@Override
 			public InputStream get() {
@@ -46,9 +72,9 @@ public class JarScanner implements com.github.da.t.RootAnalysis, Describable {
 
 		});
 
-		DeploymentArtifacts da = new DeploymentArtifacts();
-		da.cu = cu;
-		ar.put(DeploymentArtifacts.class, da);
+		ZipArchive zip = (ZipArchive) Iterables.getOnlyElement(archives);
+
+		ar.put(DeploymentArtifacts.class, new DeploymentArtifacts(zip.children));
 
 	}
 

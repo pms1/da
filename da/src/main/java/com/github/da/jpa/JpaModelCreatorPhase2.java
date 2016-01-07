@@ -34,8 +34,9 @@ import javax.inject.Inject;
 import org.objectweb.asm.Type;
 
 import com.github.da.AnalysisResult;
+import com.github.da.Archive;
 import com.github.da.ClassData;
-import com.github.da.ClassHierarchy;
+import com.github.da.ClassLoader;
 import com.github.da.DeploymentArtifacts;
 import com.github.da.JpaAccess;
 import com.github.da.TypeUtil;
@@ -54,35 +55,42 @@ public class JpaModelCreatorPhase2 implements RootAnalysis {
 
 	@Override
 	public void run() {
-		DeploymentArtifacts da = ar.get(DeploymentArtifacts.class);
+		for (Archive da : ar.get(DeploymentArtifacts.class)) {
 
-		List<PersistenceUnit> resultUnits = new LinkedList<>();
+			ch = da.getClassLoader();
+			List<PersistenceUnit> resultUnits = new LinkedList<>();
 
-		Collection<PersistenceXmlUnits> all = da.cu.getAll(PersistenceXmlUnits.class);
-		for (PersistenceXmlUnits units : all) {
-			for (PersistenceXmlUnit unit : units.getUnits()) {
-				if (unit.excludeUnlistedClasses) {
-					throw new UnsupportedOperationException();
-				} else {
-
-					ch = da.cu.get(ClassHierarchy.class);
-
+			Collection<PersistenceXmlUnits> all = ch.getAll(PersistenceXmlUnits.class);
+			for (PersistenceXmlUnits units : all) {
+				for (PersistenceXmlUnit unit : units.getUnits()) {
 					Map<ClassData, JpaAnalysisResult2> result = new HashMap<>();
 
-					for (ClassData cd : ch.getClasses()) {
+					for (String s : unit.classes) {
+
+						ClassData cd = ch.get(Type.getObjectType(s.replace('.', '/')));
+
 						phase2(cd);
+
 						result.put(cd, cd.get(JpaAnalysisResult2.class));
+					}
+					if (!unit.excludeUnlistedClasses) {
+
+						for (ClassData cd : ch.getClasses()) {
+							phase2(cd);
+							result.put(cd, cd.get(JpaAnalysisResult2.class));
+						}
+
 					}
 
 					resultUnits.add(new PersistenceUnit(result));
 				}
 			}
-		}
 
-		da.cu.put(PersistenceUnits.class, new PersistenceUnits(resultUnits));
+			da.put(PersistenceUnits.class, new PersistenceUnits(resultUnits));
+		}
 	}
 
-	ClassHierarchy ch;
+	ClassLoader ch;
 
 	boolean findId(ClassData t, Function<TResult, Map<String, ? extends JpaProperty>> e) {
 		Objects.requireNonNull(t);

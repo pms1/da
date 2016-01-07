@@ -5,6 +5,6 @@ import org.objectweb.asm.ClassReader;
 @Analysis
 public interface ClassProcessor {
 
-	void run(ClasspathUnit cu, ClassReader v);
+	void run(Archive cu, ClassReader v);
 
 }

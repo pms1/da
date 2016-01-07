@@ -7,7 +7,7 @@ import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
 import com.github.da.DataModelCreatorConfig;
-import com.github.da.JarScannerConfig;
+import com.github.da.ZipScannerConfig;
 import com.github.da.TMain;
 import com.github.da.jpa.HibernateDB2TypeMapper;
 import com.github.da.jpa.HibernateTypeMapper2;
@@ -44,7 +44,7 @@ public class AnaTestMain {
 		}
 
 		ac = new AnalysisConfiguration() //
-				.with(JarScannerConfig.newBuilder().withPath(zip).build()) //
+				.with(ZipScannerConfig.newBuilder().withPath(zip).build()) //
 				.with(dbmodelGen);
 
 		TMain.run(ac);
@@ -54,7 +54,7 @@ public class AnaTestMain {
 			if (false) {
 				n.start();
 
-				JarScannerConfig root = JarScannerConfig.newBuilder() //
+				ZipScannerConfig root = ZipScannerConfig.newBuilder() //
 						.withPath(zip) //
 						.build();
 

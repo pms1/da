@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -22,14 +23,14 @@ public class ClassResourceProcessor implements ResourceProcessor, Describable {
 	List<ClassProcessor> classProcessors;
 
 	@Override
-	public void run(ClasspathUnit cu, Path p, Provider<InputStream> is) throws IOException {
+	public void run(Supplier<ResourceId> id, Archive parent, Path p, Provider<InputStream> is) throws IOException {
 		if (!p.getFileName().toString().endsWith(".class"))
 			return;
 
 		ClassReader reader = new ClassReader(is.get());
 
 		for (ClassProcessor p1 : classProcessors)
-			p1.run(cu, reader);
+			p1.run(parent, reader);
 	}
 
 	@Override

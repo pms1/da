@@ -3,10 +3,9 @@ package com.github.da.jpa;
 import java.util.Objects;
 
 import com.github.da.ClassData;
-import com.github.da.ClassHierarchy;
+import com.github.da.ClassLoader;
 import com.github.da.JodaTypes;
 import com.github.da.JreTypes;
-import com.github.da.TypeMapper;
 
 import asm.ArrayType;
 import asm.BaseType;
@@ -31,7 +30,7 @@ import sql.types.VarcharType;
 public class HibernateTypeMapper implements TypeMapper {
 
 	@Override
-	public SqlType map(ClassHierarchy ch, JpaProperty p) {
+	public SqlType map(ClassLoader ch, JpaProperty p) {
 		Objects.requireNonNull(ch);
 		Objects.requireNonNull(p);
 

@@ -24,7 +24,7 @@ public class ClassDataCreator implements ClassProcessor {
 	ClassDataCreatorConfig config;
 
 	@Override
-	public void run(ClasspathUnit cu, ClassReader v) {
+	public void run(Archive cu, ClassReader v) {
 		ClassHierarchy ch = cu.getOrCreate(ClassHierarchy.class, ClassHierarchy::new);
 
 		boolean doClassType = config.datas.contains(Data.CLASS_TYPE);
