@@ -85,7 +85,7 @@ public class JpaModelCreatorPhase2 implements RootAnalysis {
 
 					}
 
-					resultUnits.add(new PersistenceUnit(result));
+					resultUnits.add(new PersistenceUnit(unit, result));
 				}
 			}
 

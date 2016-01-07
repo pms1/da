@@ -28,6 +28,7 @@ import com.github.da.jpa.TableAnnotation;
 import com.github.da.jpa.TypeMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 
 import sql.ColumnId;
 import sql.ColumnModel;
@@ -50,7 +51,6 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 	void setConfig(DataModelCreatorConfig config) {
 		List<TypeMapper> typeMappers = new LinkedList<>();
 		config.getTypeMappers().stream().map(p -> resolve.resolve(p)).forEach(typeMappers::add);
-		// mappers.add();
 		this.typeMappers = typeMappers;
 	}
 
@@ -342,11 +342,14 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 
 	public void run() {
 
-		dm = DatabaseModel.create();
+		DatabaseModel dm1 = null;
+
+		Map<String, DatabaseModel> byPu = new HashMap<>();
 
 		for (Archive a : ar.get(DeploymentArtifacts.class)) {
 			PersistenceUnits pus = a.get(PersistenceUnits.class);
 			for (PersistenceUnit pu : pus) {
+				dm = DatabaseModel.create();
 
 				ch = a.getClassLoader();
 				for (ClassData c : pu.data.keySet()) {
@@ -360,17 +363,22 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 					TableId t = createTableId(r);
 
 					TableModel tableModel = TableModel.create(t);
-					System.err.println("1 " + r.clazz);
-					System.err.println("2 " + r.properties);
-					System.err.println("3 " + r.clazz.get(Type.class));
 					tableModel = addColumns(tableModel, r.clazz.get(Type.class).getClassName(), r.properties.values());
 					updateTable(tableModel);
+				}
+
+				dm1 = merge(dm1, dm);
+
+				if (pu.id.jtaDataSource != null) {
+					byPu.put(pu.id.jtaDataSource, merge(byPu.get(pu.id.jtaDataSource), dm));
 				}
 			}
 		}
 		ch = null; // da.cu.get(ClassHierarchy.class);
 
-		ar.put(DatabaseModel.class, dm);
+		System.err.println("K " + byPu.keySet());
+
+		ar.put(DatabaseModel.class, dm1);
 	}
 
 	private void updateTable(TableModel tableModel) {
@@ -380,6 +388,39 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 		if (old != null)
 			dm = dm.removeTable(old.getId());
 		dm = dm.addTable(tableModel);
+	}
+
+	private DatabaseModel merge(DatabaseModel d1, DatabaseModel d2) {
+		if (d1 != null && d2 == null)
+			return d1;
+		else if (d1 == null && d2 != null)
+			return d2;
+
+		Map<TableId, TableModel> tables1 = d1.getTables().stream()
+				.collect(Collectors.toMap(TableModel::getId, Function.identity()));
+		Map<TableId, TableModel> tables2 = d2.getTables().stream()
+				.collect(Collectors.toMap(TableModel::getId, Function.identity()));
+
+		DatabaseModel d = DatabaseModel.create();
+
+		for (TableId t : Sets.union(tables1.keySet(), tables2.keySet())) {
+			TableModel t1 = tables1.get(t);
+			TableModel t2 = tables2.get(t);
+			if (t1 != null && t2 == null) {
+				d = d.addTable(t1);
+			} else if (t1 == null && t2 != null) {
+				d = d.addTable(t2);
+			} else {
+				d = d.addTable(merge(t1, t2));
+			}
+		}
+
+		for (Map.Entry<TableId, TableId> e : d1.getAliases().entries())
+			d = d.addAlias(e.getKey(), e.getValue());
+		for (Map.Entry<TableId, TableId> e : d2.getAliases().entries())
+			d = d.addAlias(e.getKey(), e.getValue());
+
+		return d;
 	}
 
 	private TableModel merge(TableModel t1, TableModel t2) {

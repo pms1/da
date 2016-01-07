@@ -83,7 +83,8 @@ public class PersistenceXmlParser implements XmlProcessor {
 			else
 				isExcludeUnlistedClasses = false;
 
-			result.add(new PersistenceXmlUnit(new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses));
+			result.add(new PersistenceXmlUnit(pu.getName(), new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses,
+					pu.getJtaDataSource()));
 		}
 		return new PersistenceXmlUnits(result);
 	}
@@ -111,7 +112,8 @@ public class PersistenceXmlParser implements XmlProcessor {
 			else
 				isExcludeUnlistedClasses = false;
 
-			result.add(new PersistenceXmlUnit(new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses));
+			result.add(new PersistenceXmlUnit(pu.getName(), new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses,
+					pu.getJtaDataSource()));
 		}
 		return new PersistenceXmlUnits(result);
 	}
