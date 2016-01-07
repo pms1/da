@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -39,9 +40,6 @@ public class PersistenceXmlParser implements XmlProcessor {
 
 	@Override
 	public void run(Archive parent, ResourceId id, Document document) {
-		if (!id.getPath().equals(persistenceXml))
-			return;
-
 		try {
 			String version = document.getDocumentElement().getAttribute("version");
 
@@ -116,6 +114,11 @@ public class PersistenceXmlParser implements XmlProcessor {
 			result.add(new PersistenceXmlUnit(new ArrayList<>(pu.getClazz()), isExcludeUnlistedClasses));
 		}
 		return new PersistenceXmlUnits(result);
+	}
+
+	@Override
+	public Predicate<Path> filter() {
+		return Predicate.isEqual(persistenceXml);
 	}
 
 }
