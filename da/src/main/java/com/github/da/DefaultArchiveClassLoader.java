@@ -5,7 +5,6 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import org.objectweb.asm.Type;
@@ -45,19 +44,16 @@ class DefaultArchiveClassLoader implements ClassLoader {
 	}
 
 	@Override
-	public ClassData get(Type type) {
-		ClassData value = find(type);
-		if (value == null)
-			throw new NoSuchElementException("Class not found: " + type);
-		return value;
-	}
-
-	@Override
 	public ClassData find(Type type) {
 		Objects.requireNonNull(type);
 		Preconditions.checkArgument(type.getSort() == Type.OBJECT);
 
 		DataId id = new DataId(Paths.get(type.getClassName().replace('.', '/') + ".class"), ClassData.class);
 		return (ClassData) archive.data.get(id);
+	}
+
+	@Override
+	public String toString() {
+		return "DefaultArchiveClassLoader(" + archive + ")";
 	}
 }
