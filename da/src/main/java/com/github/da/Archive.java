@@ -1,5 +1,7 @@
 package com.github.da;
 
+import java.util.Objects;
+
 public abstract class Archive extends GenericData {
 	// private final List<ClasspathUnit> children = new LinkedList<>();
 	//
@@ -29,14 +31,11 @@ public abstract class Archive extends GenericData {
 	// child.traverse(consumer);
 	// }
 
-	ResourceId id;
+	final ResourceId id;
 
 	public Archive(ResourceId id) {
+		Objects.requireNonNull(id);
 		this.id = id;
-	}
-
-	public Archive() {
-
 	}
 
 	abstract void add(Archive cu);

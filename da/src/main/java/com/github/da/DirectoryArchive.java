@@ -7,6 +7,10 @@ import org.objectweb.asm.Type;
 
 public class DirectoryArchive extends Archive {
 
+	public DirectoryArchive(ResourceId id) {
+		super(id);
+	}
+
 	@Override
 	void add(Archive cu) {
 		throw new Error();

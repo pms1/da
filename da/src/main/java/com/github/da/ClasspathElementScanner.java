@@ -29,7 +29,8 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 
 	@Override
 	public void run() throws IOException {
-		Archive archive = new DirectoryArchive();
+		ResourceId root = ResourceId.create(config.getPath());
+		Archive archive = new DirectoryArchive(root);
 
 		Files.walkFileTree(config.getPath(), new SimpleFileVisitor<Path>() {
 			@Override
@@ -48,9 +49,9 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 
 				};
 
+				ResourceId id = ResourceId.create(root, file);
 				for (ResourceProcessor i : proc)
-					i.run(Lazy.of(() -> ResourceId.create(ResourceId.create(config.getPath()), file)), archive,
-							config.getPath().relativize(file), pp);
+					i.run(id, archive, pp);
 
 				return super.visitFile(file, attrs);
 			}

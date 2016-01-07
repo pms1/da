@@ -36,7 +36,7 @@ public class ZipScanner implements com.github.da.t.RootAnalysis, Describable {
 
 		List<Archive> archives = new LinkedList<>();
 
-		Archive cu = new Archive() {
+		Archive cu = new Archive(ResourceId.create(config.getPath())) {
 
 			@Override
 			public <T> void put(Class<T> class1, T data1) {
@@ -59,7 +59,7 @@ public class ZipScanner implements com.github.da.t.RootAnalysis, Describable {
 			}
 		};
 
-		jpp.run(Lazy.of(() -> ResourceId.create(config.getPath())), cu, config.getPath(), new Provider<InputStream>() {
+		jpp.run(ResourceId.create(config.getPath()), cu, new Provider<InputStream>() {
 
 			@Override
 			public InputStream get() {

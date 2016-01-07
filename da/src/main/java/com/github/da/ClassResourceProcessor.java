@@ -2,9 +2,7 @@ package com.github.da;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -23,8 +21,8 @@ public class ClassResourceProcessor implements ResourceProcessor, Describable {
 	List<ClassProcessor> classProcessors;
 
 	@Override
-	public void run(Supplier<ResourceId> id, Archive parent, Path p, Provider<InputStream> is) throws IOException {
-		if (!p.getFileName().toString().endsWith(".class"))
+	public void run(ResourceId id, Archive parent, Provider<InputStream> is) throws IOException {
+		if (!id.getPath().getFileName().toString().endsWith(".class"))
 			return;
 
 		ClassReader reader = new ClassReader(is.get());

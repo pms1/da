@@ -5,6 +5,10 @@ import java.util.List;
 
 public class ZipArchive extends Archive {
 
+	public ZipArchive(ResourceId id) {
+		super(id);
+	}
+
 	List<Archive> children = new LinkedList<>();
 
 	@Override

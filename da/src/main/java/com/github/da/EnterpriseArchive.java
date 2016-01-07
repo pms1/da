@@ -8,6 +8,10 @@ import org.objectweb.asm.Type;
 
 public class EnterpriseArchive extends Archive {
 
+	public EnterpriseArchive(ResourceId id) {
+		super(id);
+	}
+
 	List<Archive> children = new LinkedList<>();
 
 	@Override

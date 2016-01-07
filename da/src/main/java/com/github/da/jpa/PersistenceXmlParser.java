@@ -7,7 +7,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import javax.inject.Provider;
 import javax.xml.bind.JAXBContext;
@@ -44,12 +43,11 @@ public class PersistenceXmlParser implements ResourceProcessor {
 	}
 
 	@Override
-	public void run(Supplier<ResourceId> id, Archive parent, Path file, Provider<InputStream> data) throws IOException {
-		if (!file.equals(persistenceXml))
+	public void run(ResourceId id, Archive parent, Provider<InputStream> data) throws IOException {
+		if (!id.getPath().equals(persistenceXml))
 			return;
 
-		System.err.println("FILE " + file);
-		// TODO Auto-generated method stub
+		System.err.println("FILE " + id.getPath());
 
 		try {
 			DocumentBuilder documentBuilder = factory.newDocumentBuilder();

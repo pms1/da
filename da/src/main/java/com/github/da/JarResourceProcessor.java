@@ -3,10 +3,8 @@ package com.github.da;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -27,16 +25,16 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 	List<ResourceProcessor> procs;
 
 	@Override
-	public void run(Supplier<ResourceId> id, Archive parent, Path p, Provider<InputStream> is) throws IOException {
+	public void run(ResourceId id, Archive parent, Provider<InputStream> is) throws IOException {
 		Archive cu;
-		if (p.getFileName().toString().endsWith(".ear"))
-			cu = new EnterpriseArchive();
-		else if (p.getFileName().toString().endsWith(".war"))
-			cu = new WebArchive(id.get());
-		else if (p.getFileName().toString().endsWith(".jar"))
-			cu = new JavaArchive(id.get());
-		else if (p.getFileName().toString().endsWith(".zip"))
-			cu = new ZipArchive();
+		if (id.getPath().getFileName().toString().endsWith(".ear"))
+			cu = new EnterpriseArchive(id);
+		else if (id.getPath().getFileName().toString().endsWith(".war"))
+			cu = new WebArchive(id);
+		else if (id.getPath().getFileName().toString().endsWith(".jar"))
+			cu = new JavaArchive(id);
+		else if (id.getPath().getFileName().toString().endsWith(".zip"))
+			cu = new ZipArchive(id);
 		else
 			return;
 
@@ -72,9 +70,9 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 
 			};
 
-			Path p1 = Paths.get(e.getName());
+			ResourceId id2 = ResourceId.create(id, Paths.get(e.getName()));
 			for (ResourceProcessor x : procs)
-				x.run(Lazy.of(() -> ResourceId.create(id.get(), p1)), cu, p1, pp);
+				x.run(id2, cu, pp);
 		}
 
 		parent.add(cu);
