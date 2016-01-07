@@ -4,6 +4,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -52,7 +54,7 @@ public abstract class Archive extends GenericData {
 		return super.toString() + "(id=" + id + ")";
 	}
 
-	static class DataId {
+	private static class DataId {
 		@Override
 		public int hashCode() {
 			final int prime = 31;
@@ -100,7 +102,7 @@ public abstract class Archive extends GenericData {
 		}
 	}
 
-	protected Map<DataId, Object> data = new HashMap<>();
+	private Map<DataId, Object> data = new HashMap<>();
 
 	public <T> void put(ResourceId id, Class<T> clazz, T value) {
 		Objects.requireNonNull(id);
@@ -112,5 +114,25 @@ public abstract class Archive extends GenericData {
 		Object existing = data.putIfAbsent(key, value);
 		if (existing != null)
 			throw new IllegalArgumentException(this + " already contains value of type " + clazz.getCanonicalName());
+	}
+
+	public <T> T find(Path path, Class<T> clazz) {
+		@SuppressWarnings("unchecked")
+		T result = (T) data.get(new DataId(path, clazz));
+		return result;
+	}
+
+	public <T> Stream<T> findAll(Predicate<Path> p, Class<T> clazz) {
+		@SuppressWarnings("unchecked")
+		Stream<T> result = (Stream<T>) data.entrySet().stream()
+				.filter(e -> p.test(e.getKey().path) && e.getKey().clazz.equals(clazz)).map(Map.Entry::getValue);
+		return result;
+	}
+
+	public <T> Stream<T> findAll(Class<T> clazz) {
+		@SuppressWarnings("unchecked")
+		Stream<T> result = (Stream<T>) data.entrySet().stream().filter(e -> e.getKey().clazz.equals(clazz))
+				.map(Map.Entry::getValue);
+		return result;
 	}
 }

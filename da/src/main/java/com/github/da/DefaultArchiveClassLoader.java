@@ -6,10 +6,10 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import org.objectweb.asm.Type;
 
-import com.github.da.Archive.DataId;
 import com.google.common.base.Preconditions;
 
 class DefaultArchiveClassLoader implements ClassLoader {
@@ -23,10 +23,8 @@ class DefaultArchiveClassLoader implements ClassLoader {
 	@Override
 	public <T> Collection<T> getAll(Path p, Class<T> class1) {
 		List<T> result = new LinkedList<>();
-		archive.data.entrySet().stream().filter(e -> e.getKey().path.equals(p) && e.getKey().clazz.equals(class1))
-				.forEach(e -> {
-					result.add((T) e.getValue());
-				});
+
+		archive.findAll(Predicate.isEqual(p), class1).forEach(result::add);
 
 		return result;
 	}
@@ -35,9 +33,9 @@ class DefaultArchiveClassLoader implements ClassLoader {
 	public Collection<ClassData> getClasses() {
 		List<ClassData> result = new LinkedList<>();
 
-		archive.data.entrySet().stream().filter(e -> e.getKey().clazz.equals(ClassData.class)).forEach(e -> {
+		archive.findAll(ClassData.class).forEach(e -> {
 			// FIXME: check path
-			result.add((ClassData) e.getValue());
+			result.add(e);
 		});
 
 		return result;
@@ -48,8 +46,7 @@ class DefaultArchiveClassLoader implements ClassLoader {
 		Objects.requireNonNull(type);
 		Preconditions.checkArgument(type.getSort() == Type.OBJECT);
 
-		DataId id = new DataId(Paths.get(type.getClassName().replace('.', '/') + ".class"), ClassData.class);
-		return (ClassData) archive.data.get(id);
+		return (ClassData) archive.find(Paths.get(type.getClassName().replace('.', '/') + ".class"), ClassData.class);
 	}
 
 	@Override
