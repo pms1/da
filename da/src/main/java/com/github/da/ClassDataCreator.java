@@ -24,8 +24,8 @@ public class ClassDataCreator implements ClassProcessor {
 	ClassDataCreatorConfig config;
 
 	@Override
-	public void run(Archive cu, ClassReader v) {
-		ClassHierarchy ch = cu.getOrCreate(ClassHierarchy.class, ClassHierarchy::new);
+	public void run(Archive archive, ResourceId id, ClassReader classReader) {
+		ClassHierarchy ch = archive.getOrCreate(ClassHierarchy.class, ClassHierarchy::new);
 
 		boolean doClassType = config.datas.contains(Data.CLASS_TYPE);
 		boolean doClassSignature = config.datas.contains(Data.CLASS_SIGNATURE);
@@ -33,7 +33,7 @@ public class ClassDataCreator implements ClassProcessor {
 		boolean doField = config.datas.contains(Data.FIELD);
 		boolean doClass = doClassType || doClassSignature || doField || doMethod || config.datas.contains(Data.CLASS);
 
-		v.accept(new ClassVisitor(Opcodes.ASM5) {
+		classReader.accept(new ClassVisitor(Opcodes.ASM5) {
 			ClassData classData;
 
 			@Override
@@ -44,6 +44,7 @@ public class ClassDataCreator implements ClassProcessor {
 					// FIXME
 					ch.remove(classId);
 					ch.put(classId, classData = new ClassData(classId));
+					archive.put(id, ClassData.class, classData);
 
 					if (doClassType) {
 						classData.put(Type.class, Type.getObjectType(name));

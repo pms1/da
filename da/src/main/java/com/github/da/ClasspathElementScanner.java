@@ -49,9 +49,9 @@ public class ClasspathElementScanner implements com.github.da.t.RootAnalysis {
 
 				};
 
-				ResourceId id = ResourceId.create(root, file);
+				ResourceId id = ResourceId.create(root, config.getPath().relativize(file));
 				for (ResourceProcessor i : proc)
-					i.run(id, archive, pp);
+					i.run(archive, id, pp);
 
 				return super.visitFile(file, attrs);
 			}

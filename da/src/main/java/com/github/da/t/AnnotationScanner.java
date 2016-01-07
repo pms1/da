@@ -5,6 +5,7 @@ import javax.inject.Inject;
 import org.objectweb.asm.ClassReader;
 
 import com.github.da.ClassProcessor;
+import com.github.da.ResourceId;
 import com.github.da.Archive;
 
 import utils.text.Describable;
@@ -22,8 +23,8 @@ public class AnnotationScanner implements ClassProcessor, Describable {
 	}
 
 	@Override
-	public void run(Archive cu, ClassReader v) {
-		System.err.println("DO " + this + " " + config + " " + v);
+	public void run(Archive archive, ResourceId id, ClassReader classReader) {
+		System.err.println("DO " + this + " " + config + " " + classReader);
 	}
 
 }

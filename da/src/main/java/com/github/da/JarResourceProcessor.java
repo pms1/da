@@ -25,7 +25,7 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 	List<ResourceProcessor> procs;
 
 	@Override
-	public void run(ResourceId id, Archive parent, Provider<InputStream> is) throws IOException {
+	public void run(Archive parent, ResourceId id, Provider<InputStream> is) throws IOException {
 		Archive cu;
 		if (id.getPath().getFileName().toString().endsWith(".ear"))
 			cu = new EnterpriseArchive(id);
@@ -72,7 +72,7 @@ public class JarResourceProcessor implements ResourceProcessor, Describable {
 
 			ResourceId id2 = ResourceId.create(id, Paths.get(e.getName()));
 			for (ResourceProcessor x : procs)
-				x.run(id2, cu, pp);
+				x.run(cu, id2, pp);
 		}
 
 		parent.add(cu);

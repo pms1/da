@@ -28,6 +28,7 @@ import com.github.da.ClassHierarchy;
 import com.github.da.Archive;
 import com.github.da.Include;
 import com.github.da.PropertyNaming;
+import com.github.da.ResourceId;
 import com.github.pms1.asm.annotation.AnnotationData;
 import com.github.pms1.asm.annotation.converter.AnnotationConverter;
 import com.github.pms1.c4.classes.annotations.AnnotationModel;
@@ -46,10 +47,10 @@ public class JpaModelCreator implements com.github.da.ClassProcessor {
 	JpaModelCreatorConfig config;
 
 	@Override
-	public void run(Archive cu, ClassReader v) {
-		ClassHierarchy ch = cu.get(ClassHierarchy.class);
+	public void run(Archive archive, ResourceId id, ClassReader classReader) {
+		ClassHierarchy ch = archive.get(ClassHierarchy.class);
 
-		v.accept(new ClassVisitor(Opcodes.ASM5) {
+		classReader.accept(new ClassVisitor(Opcodes.ASM5) {
 
 			ClassData cd;
 

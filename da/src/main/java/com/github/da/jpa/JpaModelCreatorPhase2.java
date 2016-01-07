@@ -17,6 +17,7 @@ import static com.github.da.JreTypes.javaSqlDate;
 import static com.github.da.JreTypes.javaSqlTime;
 import static com.github.da.JreTypes.javaUtilDate;
 
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,12 +56,13 @@ public class JpaModelCreatorPhase2 implements RootAnalysis {
 
 	@Override
 	public void run() {
-		for (Archive da : ar.get(DeploymentArtifacts.class)) {
 
+		for (Archive da : ar.get(DeploymentArtifacts.class)) {
 			ch = da.getClassLoader();
 			List<PersistenceUnit> resultUnits = new LinkedList<>();
 
-			Collection<PersistenceXmlUnits> all = ch.getAll(PersistenceXmlUnits.class);
+			Collection<PersistenceXmlUnits> all = ch.getAll(Paths.get("META-INF/persistence.xml"),
+					PersistenceXmlUnits.class);
 			for (PersistenceXmlUnits units : all) {
 				for (PersistenceXmlUnit unit : units.getUnits()) {
 					Map<ClassData, JpaAnalysisResult2> result = new HashMap<>();
@@ -73,8 +75,9 @@ public class JpaModelCreatorPhase2 implements RootAnalysis {
 
 						result.put(cd, cd.get(JpaAnalysisResult2.class));
 					}
+					System.err.println("XXX " + unit.excludeUnlistedClasses + " " + ch);
 					if (!unit.excludeUnlistedClasses) {
-
+						// FIXME: restrict to archive
 						for (ClassData cd : ch.getClasses()) {
 							phase2(cd);
 							result.put(cd, cd.get(JpaAnalysisResult2.class));

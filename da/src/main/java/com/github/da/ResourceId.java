@@ -30,4 +30,8 @@ public class ResourceId {
 	public Path getPath() {
 		return path;
 	}
+
+	public ResourceId getParent() {
+		return parent;
+	}
 }

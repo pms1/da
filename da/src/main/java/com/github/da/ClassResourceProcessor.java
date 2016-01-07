@@ -21,14 +21,14 @@ public class ClassResourceProcessor implements ResourceProcessor, Describable {
 	List<ClassProcessor> classProcessors;
 
 	@Override
-	public void run(ResourceId id, Archive parent, Provider<InputStream> is) throws IOException {
+	public void run(Archive parent, ResourceId id, Provider<InputStream> is) throws IOException {
 		if (!id.getPath().getFileName().toString().endsWith(".class"))
 			return;
 
 		ClassReader reader = new ClassReader(is.get());
 
-		for (ClassProcessor p1 : classProcessors)
-			p1.run(parent, reader);
+		for (ClassProcessor classProcessor : classProcessors)
+			classProcessor.run(parent, id, reader);
 	}
 
 	@Override

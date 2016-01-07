@@ -1,5 +1,6 @@
 package com.github.da;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,7 +33,7 @@ public class EnterpriseArchive extends Archive {
 		return new ClassLoader() {
 
 			@Override
-			public <T> Collection<T> getAll(Class<T> class1) {
+			public <T> Collection<T> getAll(Path p, Class<T> class1) {
 				List<T> result = new LinkedList<>();
 				for (Archive c : children) {
 					T t = c.find(class1);

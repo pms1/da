@@ -43,11 +43,9 @@ public class PersistenceXmlParser implements ResourceProcessor {
 	}
 
 	@Override
-	public void run(ResourceId id, Archive parent, Provider<InputStream> data) throws IOException {
+	public void run(Archive parent, ResourceId id, Provider<InputStream> data) throws IOException {
 		if (!id.getPath().equals(persistenceXml))
 			return;
-
-		System.err.println("FILE " + id.getPath());
 
 		try {
 			DocumentBuilder documentBuilder = factory.newDocumentBuilder();
@@ -66,7 +64,7 @@ public class PersistenceXmlParser implements ResourceProcessor {
 				throw new Error("unhandled jpa version: " + version);
 			}
 
-			parent.put(PersistenceXmlUnits.class, pu);
+			parent.put(id, PersistenceXmlUnits.class, pu);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

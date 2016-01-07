@@ -59,7 +59,7 @@ public class ZipScanner implements com.github.da.t.RootAnalysis, Describable {
 			}
 		};
 
-		jpp.run(ResourceId.create(config.getPath()), cu, new Provider<InputStream>() {
+		jpp.run(cu, ResourceId.create(config.getPath()), new Provider<InputStream>() {
 
 			@Override
 			public InputStream get() {

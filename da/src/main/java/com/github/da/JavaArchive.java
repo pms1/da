@@ -1,5 +1,6 @@
 package com.github.da;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -22,7 +23,7 @@ public class JavaArchive extends Archive {
 		return new ClassLoader() {
 
 			@Override
-			public <T> Collection<T> getAll(Class<T> class1) {
+			public <T> Collection<T> getAll(Path p, Class<T> class1) {
 				T t = JavaArchive.this.find(class1);
 				if (t != null)
 					return Collections.singleton(t);

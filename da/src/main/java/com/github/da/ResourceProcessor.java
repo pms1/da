@@ -8,6 +8,6 @@ import javax.inject.Provider;
 @Analysis
 public interface ResourceProcessor {
 
-	void run(ResourceId id, Archive parent, Provider<InputStream> data) throws IOException;
+	void run(Archive parent, ResourceId id, Provider<InputStream> data) throws IOException;
 
 }
