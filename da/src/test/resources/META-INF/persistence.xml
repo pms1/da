@@ -5,7 +5,14 @@
     xmlns="http://xmlns.jcp.org/xml/ns/persistence"
     xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
   <persistence-unit name="MyPU" transaction-type="RESOURCE_LOCAL">
-  
+
+<!-- 
+	<provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+	 -->
+	  <!-- 
+	<class>da.CompareDB2$C1</class>
+	<class>da.CompareDB2$C2</class>
+	 -->
 	<!--  <class>xxxx.XXXXX</class>  -->
 	<!-- 
 	<exclude-unlisted-classes>true</exclude-unlisted-classes>

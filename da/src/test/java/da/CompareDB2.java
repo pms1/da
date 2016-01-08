@@ -26,6 +26,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
@@ -49,7 +50,8 @@ public class CompareDB2 {
 			Class<?> c = Bottom1.class;
 			Path p = findDir(c);
 			AnalysisConfiguration config = new AnalysisConfiguration();
-			config.with(ClasspathElementScannerConfig.newBuilder().withPath(p).build());
+			config.withAnalysis(
+					(AnalyserConfiguration<?>) ClasspathElementScannerConfig.newBuilder().withPath(p).build());
 			DataModelCreatorConfig dbmodelGen = DataModelCreatorConfig.newBuilder()
 					.withTypeMapper(HibernateDB2TypeMapper.class)//
 					.withTypeMapper(HibernateTypeMapper.class)//

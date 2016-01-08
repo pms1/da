@@ -8,15 +8,19 @@ import com.github.da.jpa.TypeMapper;
 @Configuration
 public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreator> {
 	private final List<Class<? extends TypeMapper>> typeMappers;
+	private boolean aggregateByDataSource;
 
 	public interface Builder {
 		Builder withTypeMapper(Class<? extends TypeMapper> typeMapper);
 
 		DataModelCreatorConfig build();
+
+		Builder withAggregateByDataSource(boolean value);
 	}
 
 	private static class BuilderImpl implements Builder {
-		List<Class<? extends TypeMapper>> typeMappers = new LinkedList<>();
+		private List<Class<? extends TypeMapper>> typeMappers = new LinkedList<>();
+		private boolean aggregateByDataSource = false;
 
 		@Override
 		public Builder withTypeMapper(Class<? extends TypeMapper> typeMapper) {
@@ -26,14 +30,21 @@ public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreat
 
 		@Override
 		public DataModelCreatorConfig build() {
-			return new DataModelCreatorConfig(typeMappers);
+			return new DataModelCreatorConfig(typeMappers, aggregateByDataSource);
+		}
+
+		@Override
+		public Builder withAggregateByDataSource(boolean value) {
+			this.aggregateByDataSource = value;
+			return this;
 		}
 
 	}
 
-	public DataModelCreatorConfig(List<Class<? extends TypeMapper>> typeMappers) {
+	public DataModelCreatorConfig(List<Class<? extends TypeMapper>> typeMappers, boolean aggregateByDataSource) {
 		super(DataModelCreator.class);
 		this.typeMappers = typeMappers;
+		this.aggregateByDataSource = aggregateByDataSource;
 	}
 
 	public static Builder newBuilder() {
@@ -42,5 +53,9 @@ public class DataModelCreatorConfig extends AnalyserConfiguration<DataModelCreat
 
 	public List<Class<? extends TypeMapper>> getTypeMappers() {
 		return typeMappers;
+	}
+
+	public boolean isAggregateByDataSource() {
+		return aggregateByDataSource;
 	}
 }

@@ -44,16 +44,16 @@ public class TMainTest {
 	public void t1() throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 
-		config = config.with(AnalyserConfiguration.of(JpaAnalysis.class));
+		config = config.withAnalysis(AnalyserConfiguration.of(JpaAnalysis.class));
 
 		TMain.run(config);
 
-		config = config.with(AnalyserConfiguration.of(JpaAnalysis2.class));
+		config = config.withAnalysis(AnalyserConfiguration.of(JpaAnalysis2.class));
 		TMain.run(config);
-		config = config.with(AnalyserConfiguration.of(JpaAnalysis.class));
-		config = config.with(AnalyserConfiguration.of(JpaAnalysis2.class));
+		config = config.withAnalysis(AnalyserConfiguration.of(JpaAnalysis.class));
+		config = config.withAnalysis(AnalyserConfiguration.of(JpaAnalysis2.class));
 		TMain.run(config);
-		config = config.with(AnalyserConfiguration.of(JpaAnalysis3.class));
+		config = config.withAnalysis(AnalyserConfiguration.of(JpaAnalysis3.class));
 		TMain.run(config);
 	}
 
@@ -61,13 +61,13 @@ public class TMainTest {
 	public void t2() throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 
-		config = config.with(new RootAnalysis1Config(Paths.get("foo")));
+		config = config.withAnalysis((AnalyserConfiguration<?>) new RootAnalysis1Config(Paths.get("foo")));
 
 		TMain.run(config);
 
-		config = config.with(AnalyserConfiguration.of(ClassResourceProcessor.class));
-		config = config.with(AnalyserConfiguration.of(JarResourceProcessor.class));
-		config = config.with(new AnnotationScannerConfig(3, 1));
+		config = config.withAnalysis(AnalyserConfiguration.of(ClassResourceProcessor.class));
+		config = config.withAnalysis(AnalyserConfiguration.of(JarResourceProcessor.class));
+		config = config.withAnalysis((AnalyserConfiguration<?>) new AnnotationScannerConfig(3, 1));
 
 		TMain.run(config);
 	}
@@ -76,8 +76,8 @@ public class TMainTest {
 	public void t3() throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 
-		config = config.with(AnalyserConfiguration.of(RootAnalysis3.class));
-		config = config.with(new RootAnalysis2Config());
+		config = config.withAnalysis(AnalyserConfiguration.of(RootAnalysis3.class));
+		config = config.withAnalysis((AnalyserConfiguration<?>) new RootAnalysis2Config());
 
 		TMain.run(config);
 	}
@@ -130,7 +130,7 @@ public class TMainTest {
 	public void t4() throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 
-		config.with(AnalyserConfiguration.of(R2.class));
+		config.withAnalysis(AnalyserConfiguration.of(R2.class));
 
 		int old = r1aRuns;
 		TMain.run(config);
@@ -142,8 +142,8 @@ public class TMainTest {
 	public void t4a() throws IOException {
 		AnalysisConfiguration config = new AnalysisConfiguration();
 
-		config.with(AnalyserConfiguration.of(R1.class));
-		config.with(AnalyserConfiguration.of(R2.class));
+		config.withAnalysis(AnalyserConfiguration.of(R1.class));
+		config.withAnalysis(AnalyserConfiguration.of(R2.class));
 
 		int old = r1aRuns;
 		TMain.run(config);

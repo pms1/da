@@ -10,18 +10,24 @@ public class AnalysisConfiguration {
 	}
 
 	private final List<AnalyserConfiguration<?>> configs = new LinkedList<>();
-
-	public AnalysisConfiguration with(AnalyserConfiguration<?> config) {
-		configs.add(config);
-		return this;
-	}
+	private final List<Object> requirements = new LinkedList<>();
 
 	public AnalysisConfiguration withAnalysis(AnalyserConfiguration<?> config) {
 		configs.add(config);
 		return this;
 	}
 
+	public AnalysisConfiguration withResult(Object requirement) {
+		requirements.add(requirement);
+		return this;
+	}
+
 	public List<AnalyserConfiguration<?>> getAnalyserConfigurations() {
 		return new ArrayList<>(configs);
 	}
+
+	public List<Object> getResults() {
+		return new ArrayList<>(configs);
+	}
+
 }

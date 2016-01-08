@@ -22,6 +22,7 @@ import sql.types.DateType;
 import sql.types.DecimalType;
 import sql.types.DoubleType;
 import sql.types.IntType;
+import sql.types.LongVarcharType;
 import sql.types.SmallIntType;
 import sql.types.TimeType;
 import sql.types.TimestampType;
@@ -118,6 +119,9 @@ public abstract class ModelReader {
 					break;
 				case VARBINARY:
 					cm = cm.withType(VarbinaryType.create());
+					break;
+				case LONGVARCHAR:
+					cm = cm.withType(LongVarcharType.create());
 					break;
 				default:
 					throw new Error("missing type " + dataType + " " + dataType2);

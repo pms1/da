@@ -97,7 +97,7 @@ public class Collectors2 {
 			if (k[0] == null)
 				k[0] = t;
 			else
-				throw new IllegalArgumentException("two or more");
+				throw new IllegalArgumentException("Two or more:  " + k[0] + " " + t);
 		};
 		BinaryOperator<Object[]> combiner = (k1, k2) -> {
 			if (true)

@@ -47,11 +47,14 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 
 	List<TypeMapper> typeMappers;
 
+	DataModelCreatorConfig config;
+
 	@Inject
 	void setConfig(DataModelCreatorConfig config) {
 		List<TypeMapper> typeMappers = new LinkedList<>();
 		config.getTypeMappers().stream().map(p -> resolve.resolve(p)).forEach(typeMappers::add);
 		this.typeMappers = typeMappers;
+		this.config = config;
 	}
 
 	static TableId createTableId(String overrideSchema, String overrideTable, String defaultTable) {
@@ -340,11 +343,18 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 	@Inject
 	AnalysisResult ar;
 
+	private DatabaseModelsByDataSource result;
+
 	public void run() {
 
 		DatabaseModel dm1 = null;
 
-		Map<String, DatabaseModel> byPu = new HashMap<>();
+		Map<String, DatabaseModel> byDataSource;
+		if (config.isAggregateByDataSource())
+			byDataSource = new HashMap<>();
+		else
+			byDataSource = null;
+		int nextAnon = 1;
 
 		for (Archive a : ar.get(DeploymentArtifacts.class)) {
 			PersistenceUnits pus = a.get(PersistenceUnits.class);
@@ -369,16 +379,25 @@ public class DataModelCreator implements com.github.da.t.RootAnalysis {
 
 				dm1 = merge(dm1, dm);
 
-				if (pu.id.jtaDataSource != null) {
-					byPu.put(pu.id.jtaDataSource, merge(byPu.get(pu.id.jtaDataSource), dm));
+				if (byDataSource != null) {
+					String id;
+					if (pu.id.jtaDataSource != null)
+						id = pu.id.jtaDataSource;
+					else
+						id = "(no data source #" + nextAnon++ + ")";
+					byDataSource.put(id, merge(byDataSource.get(id), dm));
 				}
 			}
 		}
 		ch = null; // da.cu.get(ClassHierarchy.class);
 
-		System.err.println("K " + byPu.keySet());
-
 		ar.put(DatabaseModel.class, dm1);
+
+		if (byDataSource != null) {
+			DatabaseModelsByDataSource result = new DatabaseModelsByDataSource();
+			result.databaseModels = byDataSource;
+			ar.put(DatabaseModelsByDataSource.class, result);
+		}
 	}
 
 	private void updateTable(TableModel tableModel) {

@@ -3,6 +3,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
@@ -36,16 +37,12 @@ public class AnaTestMain {
 
 		AnalysisConfiguration ac;
 		if (false) {
-			ac = new AnalysisConfiguration() //
-					.with(ClasspathElementScannerConfig.newBuilder().withPath(CompareH2.findDir(Bottom1.class)).build()) //
-					.with(dbmodelGen);
+			ac = new AnalysisConfiguration().withAnalysis((AnalyserConfiguration<?>) ClasspathElementScannerConfig.newBuilder().withPath(CompareH2.findDir(Bottom1.class)).build()).withAnalysis((AnalyserConfiguration<?>) dbmodelGen);
 
 			TMain.run(ac);
 		}
 
-		ac = new AnalysisConfiguration() //
-				.with(ZipScannerConfig.newBuilder().withPath(zip).build()) //
-				.with(dbmodelGen);
+		ac = new AnalysisConfiguration().withAnalysis((AnalyserConfiguration<?>) ZipScannerConfig.newBuilder().withPath(zip).build()).withAnalysis((AnalyserConfiguration<?>) dbmodelGen);
 
 		TMain.run(ac);
 
@@ -59,10 +56,10 @@ public class AnaTestMain {
 						.build();
 
 				AnalysisConfiguration config = new AnalysisConfiguration(); //
-				config = config.with(root);
+				config = config.withAnalysis((AnalyserConfiguration<?>) root);
 
 				JpaModelCreatorConfig jpa = JpaModelCreatorConfig.newBuilder().build();
-				config = config.with(jpa);
+				config = config.withAnalysis((AnalyserConfiguration<?>) jpa);
 
 				// .withAnalysis(JarAnalysis.class, dc) //
 				// .withAnalysis(ClassProcessor.class) //
@@ -88,7 +85,7 @@ public class AnaTestMain {
 				dbmodelGen = DataModelCreatorConfig.newBuilder().withTypeMapper(HibernateDB2TypeMapper.class)//
 						.withTypeMapper(HibernateTypeMapper2.class)//
 						.build();
-				config.with(dbmodelGen);
+				config.withAnalysis((AnalyserConfiguration<?>) dbmodelGen);
 				AnalysisResult ar = TMain.run(config);
 				DatabaseModel databaseModel = ar.get(DatabaseModel.class);
 				System.err.println("databaseModel=" + databaseModel);

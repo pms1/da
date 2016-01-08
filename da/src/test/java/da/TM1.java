@@ -26,6 +26,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OrderColumn;
 import javax.persistence.Table;
 
+import com.github.da.AnalyserConfiguration;
 import com.github.da.AnalysisConfiguration;
 import com.github.da.AnalysisResult;
 import com.github.da.ClasspathElementScannerConfig;
@@ -49,7 +50,8 @@ public class TM1 {
 			Class<?> c = Bottom1.class;
 			Path p = findDir(c);
 			AnalysisConfiguration config = new AnalysisConfiguration();
-			config.with(ClasspathElementScannerConfig.newBuilder().withPath(p).build());
+			config.withAnalysis(
+					(AnalyserConfiguration<?>) ClasspathElementScannerConfig.newBuilder().withPath(p).build());
 			DataModelCreatorConfig dbmodelGen = DataModelCreatorConfig.newBuilder()
 					.withTypeMapper(HibernateDB2TypeMapper.class)//
 					.withTypeMapper(HibernateTypeMapper.class)//
@@ -93,11 +95,14 @@ public class TM1 {
 		}
 
 		public void compare(DatabaseModel dm1, DatabaseModel dm2) {
+			Objects.requireNonNull(dm1);
+			Objects.requireNonNull(dm2);
+
 			dm1 = dm1.renameTables(tf1);
 			dm2 = dm2.renameTables(tf2);
 			Set<TableId> tables = new HashSet<>();
-			dm1.getTables().stream().map(p -> p.getId()).forEach(tables::add);
-			dm2.getTables().stream().map(p -> p.getId()).forEach(tables::add);
+			dm1.getTables().stream().map(TableModel::getId).forEach(tables::add);
+			dm2.getTables().stream().map(TableModel::getId).forEach(tables::add);
 
 			for (TableId t : tables) {
 				TableModel tm1 = dm1.getTable(t);
